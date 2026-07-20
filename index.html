@@ -157,9 +157,8 @@
 
   <div class="stat-grid">
     <div class="stat-card"><div class="badge warm">Goal</div><div class="big-num" id="stat-goal">-</div><div class="label-sm">คริสตจักร (เป้าหมาย)</div></div>
-    <div class="stat-card"><div class="badge cool">MOU</div><div class="big-num" id="stat-mou">-</div><div class="label-sm">คริสตจักร</div></div>
-    <div class="stat-card"><div class="badge warm">Seed Fund</div><div class="big-num" id="stat-seed">-</div><div class="label-sm">คริสตจักร</div></div>
-    <div class="stat-card"><div class="badge cool">พบจริงในระบบ</div><div class="big-num" id="stat-actual">-</div><div class="label-sm">คน / คริสตจักร</div></div>
+    <div class="stat-card"><div class="badge cool">Seed Fund</div><div class="big-num" id="stat-seed">-</div><div class="label-sm">คริสตจักร</div></div>
+    <div class="stat-card"><div class="badge warm">พบจริงในระบบ</div><div class="big-num" id="stat-actual">-</div><div class="label-sm">คน / คริสตจักร</div></div>
   </div>
 
   <div class="progress-card">
@@ -248,7 +247,6 @@ function renderDashboard(partner){
   document.getElementById('org-title').textContent = partner.org;
   document.getElementById('leader-sub').textContent = partner.leader;
   document.getElementById('stat-goal').textContent = fmtVal(partner.goal);
-  document.getElementById('stat-mou').textContent = fmtVal(partner.mou);
   document.getElementById('stat-seed').textContent = fmtVal(partner.seed);
   document.getElementById('stat-actual').textContent = partner.actual;
   document.getElementById('stat-per-term').textContent = fmtVal(partner.perTerm);
