@@ -117,11 +117,17 @@
   /* report form buttons */
   .report-btn-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px;}
   .btn-report{
-    flex:1;min-width:240px;padding:18px 22px;border-radius:16px;border:1.5px solid var(--card-border);
-    background:#fff;font-family:'Prompt',sans-serif;font-weight:700;font-size:0.92rem;color:var(--text-dark);
-    cursor:pointer;text-align:center;line-height:1.5;transition:box-shadow .15s, border-color .15s;
+    flex:1;min-width:240px;padding:18px 22px;border-radius:16px;border:none;
+    font-family:'Prompt',sans-serif;font-weight:700;font-size:0.92rem;color:#fff;
+    cursor:pointer;text-align:center;line-height:1.5;transition:box-shadow .15s, transform .15s;
+    background:linear-gradient(135deg,#2ec5e0,#2a5be0);
+    box-shadow:0 10px 24px rgba(42,91,224,0.3);
   }
-  .btn-report:hover{box-shadow:0 10px 24px rgba(20,20,60,0.1);border-color:var(--blue);}
+  .btn-report:hover{box-shadow:0 14px 30px rgba(42,91,224,0.4);transform:translateY(-2px);}
+  .btn-report:nth-child(2){background:linear-gradient(135deg,#ff9a3d,#ff4d4d);box-shadow:0 10px 24px rgba(255,77,77,0.3);}
+  .btn-report:nth-child(2):hover{box-shadow:0 14px 30px rgba(255,77,77,0.4);}
+  .btn-report:nth-child(3){background:linear-gradient(135deg,#2a2ae0,#0b0b2e);box-shadow:0 10px 24px rgba(11,11,46,0.3);}
+  .btn-report:nth-child(3):hover{box-shadow:0 14px 30px rgba(11,11,46,0.4);}
 
   /* coming soon takeover screen */
   .coming-soon-screen{
