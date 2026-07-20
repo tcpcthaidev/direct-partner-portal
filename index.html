@@ -113,6 +113,23 @@
   .modal-msg{font-size:0.85rem;margin-top:10px;min-height:18px;font-weight:600;}
   .modal-msg.err{color:var(--red);}
   .modal-msg.ok{color:#1a8f4c;}
+
+  /* report form buttons */
+  .report-btn-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px;}
+  .btn-report{
+    flex:1;min-width:240px;padding:18px 22px;border-radius:16px;border:1.5px solid var(--card-border);
+    background:#fff;font-family:'Prompt',sans-serif;font-weight:700;font-size:0.92rem;color:var(--text-dark);
+    cursor:pointer;text-align:center;line-height:1.5;transition:box-shadow .15s, border-color .15s;
+  }
+  .btn-report:hover{box-shadow:0 10px 24px rgba(20,20,60,0.1);border-color:var(--blue);}
+
+  /* coming soon takeover screen */
+  .coming-soon-screen{
+    position:fixed;inset:0;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:40px;text-align:center;z-index:950;
+  }
+  .coming-soon-screen .big{font-size:2.5rem;margin-bottom:18px;}
+  .coming-soon-msg{font-size:1.15rem;font-weight:700;color:var(--text-dark);max-width:480px;margin-bottom:28px;line-height:1.7;}
 </style>
 </head>
 <body>
@@ -150,10 +167,16 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn-primary" id="add-church-btn">+ เพิ่มคริสตจักร</button>
+      <button class="btn-primary" id="add-church-btn" style="display:none;">+ เพิ่มคริสตจักร</button>
       <button class="btn-outline" id="logout-btn">ออกจากระบบ</button>
     </div>
   </header>
+
+  <div class="report-btn-row">
+    <button class="btn-report" data-form-idx="0">เข้าแบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนสิงหาคม 2569"</button>
+    <button class="btn-report" data-form-idx="1">เข้าแบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนตุลาคม 2569"</button>
+    <button class="btn-report" data-form-idx="2">เข้าแบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนมกราคม 2570"</button>
+  </div>
 
   <div class="stat-grid">
     <div class="stat-card"><div class="badge warm">Goal</div><div class="big-num" id="stat-goal">-</div><div class="label-sm">คริสตจักร (เป้าหมาย)</div></div>
@@ -199,6 +222,13 @@
       <button class="modal-submit" id="modal-submit-btn">บันทึก</button>
     </div>
   </div>
+</div>
+
+<!-- ============ COMING SOON (REPORT FORM PLACEHOLDER) SCREEN ============ -->
+<div class="coming-soon-screen" id="coming-soon-screen">
+  <div class="big">🕊️</div>
+  <div class="coming-soon-msg">รอทีมงาน TCPC แจ้งวันที่เผยแพร่แบบฟอร์มนี้อีกครั้ง เพื่อเริ่มประเมินผล</div>
+  <button class="btn-outline" id="coming-soon-back-btn">กลับ</button>
 </div>
 
 <script>
@@ -307,6 +337,29 @@ function attemptLogin(){
       errEl.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || err);
     });
 }
+
+// ===== ปุ่มแบบฟอร์มประเมินผลคริสตจักร (แก้ URL ตรงนี้เมื่อฟอร์มพร้อมเผยแพร่จริง) =====
+// ถ้าค่าเป็น '#' (ยังไม่พร้อม) ระบบจะพาไปหน้า "รอทีมงาน TCPC แจ้งวันที่..." แทนการเปิดฟอร์ม
+const REPORT_FORM_URLS = [
+  '#', // ครั้งที่ 1 เดือนสิงหาคม 2569
+  '#', // ครั้งที่ 1 เดือนตุลาคม 2569
+  '#'  // ครั้งที่ 1 เดือนมกราคม 2570
+];
+
+document.querySelectorAll('.btn-report').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    const idx = parseInt(btn.getAttribute('data-form-idx'), 10);
+    const url = REPORT_FORM_URLS[idx];
+    if(!url || url === '#'){
+      document.getElementById('coming-soon-screen').style.display = 'flex';
+    } else {
+      window.open(url, '_blank');
+    }
+  });
+});
+document.getElementById('coming-soon-back-btn').addEventListener('click', () => {
+  document.getElementById('coming-soon-screen').style.display = 'none';
+});
 
 document.getElementById('login-btn').addEventListener('click', attemptLogin);
 document.getElementById('phone-input').addEventListener('keydown', (e) => { if(e.key === 'Enter') attemptLogin(); });
