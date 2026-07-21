@@ -42,6 +42,12 @@
   .login-note{font-size:0.75rem;color:var(--text-mute);margin-top:22px;line-height:1.6;}
 
   #dash-screen{display:none;padding:30px 40px 60px 40px;}
+  .assistant-banner{
+    display:none;align-items:center;gap:10px;background:linear-gradient(90deg,#fff4e0,#ffe6cc);
+    border:1.5px solid #ffbf69;color:#8a4b00;border-radius:14px;padding:12px 18px;
+    font-size:0.88rem;font-weight:600;margin-bottom:18px;line-height:1.6;
+  }
+  .assistant-banner b{color:#5c3200;}
   header.dash-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:26px;}
   .dash-header-left{display:flex;align-items:center;gap:16px;}
   .dash-logo{width:52px;height:52px;border-radius:50%;background:var(--navy);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
@@ -149,7 +155,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2" fill="#fff"/></svg>
     </div>
     <h1>Thailand Church Planting Training Center</h1>
-    <div class="sub">ระบบสำหรับ Direct Partner — กรอกเบอร์โทรศัพท์เพื่อเข้าดูข้อมูลกลุ่มของคุณ</div>
+    <div class="sub">ระบบสำหรับ Direct Partner และผู้ช่วย — กรอกเบอร์โทรศัพท์เพื่อเข้าดูข้อมูลกลุ่มของคุณ</div>
     <input type="tel" id="phone-input" placeholder="เบอร์โทรศัพท์ เช่น 0812345678" maxlength="20">
     <button id="login-btn">เข้าสู่ระบบ</button>
     <div class="login-error" id="login-error"></div>
@@ -177,6 +183,8 @@
       <button class="btn-outline" id="logout-btn">ออกจากระบบ</button>
     </div>
   </header>
+
+  <div class="assistant-banner" id="assistant-banner"></div>
 
   <div class="report-btn-row">
     <button class="btn-report" data-form-idx="0">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนสิงหาคม 2569"</button>
@@ -243,6 +251,7 @@
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwm5SgMjCiXAqdr5y3p3L8or7OkzzDSxq9ADvWFKLDk20PnoGs9-hp4UKpTEJBhytUO/exec';
 
 let currentPartner = null;
+let currentLoginPhone = null; // เบอร์ที่ใช้ล็อกอินจริง (อาจเป็นเบอร์ผู้ช่วย ไม่ใช่เบอร์ Direct Partner) ใช้รีเฟรชข้อมูลแบบเงียบๆ
 
 // เรียก backend ผ่าน fetch() แบบ POST, Content-Type: text/plain เพื่อเลี่ยง CORS preflight
 // (Apps Script ไม่รองรับ preflight OPTIONS request โดยตรง การใช้ text/plain ทำให้เบราว์เซอร์มองเป็น "simple request")
@@ -282,6 +291,16 @@ function renderDashboard(partner){
 
   document.getElementById('org-title').textContent = partner.org;
   document.getElementById('leader-sub').textContent = partner.leader;
+
+  const banner = document.getElementById('assistant-banner');
+  if(partner.isAssistant){
+    banner.style.display = 'flex';
+    banner.innerHTML = `🤝 คุณกำลังเข้าสู่ระบบในฐานะ<b>${partner.assistantName ? ' ผู้ช่วย: ' + partner.assistantName : 'ผู้ช่วย'}</b>`
+      + ` ของ Direct Partner: <b>${partner.leader}</b> (${partner.org}) — กรุณาตรวจสอบว่าเป็นชื่อที่ถูกต้องก่อนใช้งาน`;
+  } else {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+  }
   document.getElementById('stat-goal').textContent = fmtVal(partner.goal);
   document.getElementById('stat-seed').textContent = fmtVal(partner.seed);
   document.getElementById('stat-actual').textContent = partner.actual;
@@ -332,6 +351,7 @@ function attemptLogin(){
       showLoading(false);
       btn.disabled = false;
       if(res.success){
+        currentLoginPhone = val;
         renderDashboard(res.partner);
       } else {
         errEl.textContent = res.message || 'ไม่พบเบอร์นี้ในระบบ';
@@ -372,6 +392,7 @@ document.getElementById('phone-input').addEventListener('keydown', (e) => { if(e
 
 document.getElementById('logout-btn').addEventListener('click', () => {
   currentPartner = null;
+  currentLoginPhone = null;
   document.getElementById('dash-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('phone-input').value = '';
@@ -429,10 +450,12 @@ document.getElementById('modal-submit-btn').addEventListener('click', () => {
 });
 
 // รีเฟรชข้อมูลหลังเพิ่มคริสตจักรสำเร็จ โดยใช้เบอร์เดิมที่ล็อกอินอยู่ (ไม่ต้องขอกรอกใหม่)
+// ใช้ currentLoginPhone (เบอร์ที่พิมพ์ล็อกอินจริง) ไม่ใช่ currentPartner.contact เพราะถ้าล็อกอินด้วยเบอร์ผู้ช่วย
+// currentPartner.contact จะเป็นเบอร์ของ Direct Partner ไม่ใช่เบอร์ผู้ช่วย ทำให้ log กลับเข้าผิดโหมดได้
 function attemptLoginSilently(){
-  if(!currentPartner || !currentPartner.contact) return;
+  if(!currentLoginPhone) return;
   showLoading(true);
-  callApi('checkLogin', { phone: currentPartner.contact, clientId: getClientId() })
+  callApi('checkLogin', { phone: currentLoginPhone, clientId: getClientId() })
     .then(function(res){
       showLoading(false);
       if(res.success) renderDashboard(res.partner);
