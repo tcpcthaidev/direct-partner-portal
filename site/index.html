@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thailand Church Planting Training Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0b0b2e; --blue:#2a2ae0; --orange:#ff7a3d; --red:#ff4d4d;
+    --grad-badge-warm: linear-gradient(90deg,#ff4d4d,#ff9a3d);
+    --grad-badge-cool: linear-gradient(90deg,#0b0b2e,#2a2ae0);
+    --bg-grad: linear-gradient(160deg,#eaf3ff 0%, #ffffff 45%, #cfe4fb 100%);
+    --card-border:#dfe6f0; --text-dark:#14142b; --text-mute:#6b7280;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Prompt',sans-serif;background:var(--bg-grad);color:var(--text-dark);min-height:100vh;}
+
+  #login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+  .login-card{
+    background:#fff;border:1.5px solid var(--card-border);border-radius:24px;padding:44px 40px;
+    max-width:420px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(20,20,60,0.08);
+  }
+  .login-logo{width:64px;height:64px;border-radius:50%;background:var(--navy);margin:0 auto 20px auto;display:flex;align-items:center;justify-content:center;}
+  .login-logo svg{width:30px;height:30px;fill:#fff;}
+  .login-card h1{font-size:1.3rem;margin:0 0 6px 0;}
+  .login-card .sub{font-size:0.9rem;color:var(--text-mute);margin-bottom:28px;}
+  .login-card input{
+    width:100%;padding:16px 18px;border-radius:14px;border:1.5px solid var(--card-border);
+    font-family:'Prompt',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:1px;margin-bottom:14px;
+  }
+  .login-card input:focus{outline:none;border-color:var(--blue);}
+  .login-card button{
+    width:100%;padding:16px;border:none;border-radius:14px;
+    background:linear-gradient(90deg,#2ec5e0,#2a5be0);color:#fff;font-family:'Prompt',sans-serif;
+    font-size:1.05rem;font-weight:700;cursor:pointer;transition:opacity .15s;
+  }
+  .login-card button:disabled{opacity:0.6;cursor:default;}
+  .login-card button:hover:not(:disabled){opacity:0.9;}
+  .login-error{color:var(--red);font-size:0.85rem;margin-top:12px;min-height:20px;font-weight:600;}
+  .login-note{font-size:0.75rem;color:var(--text-mute);margin-top:22px;line-height:1.6;}
+
+  #dash-screen{display:none;padding:30px 40px 60px 40px;}
+  .assistant-banner{
+    display:none;align-items:center;gap:10px;background:linear-gradient(90deg,#fff4e0,#ffe6cc);
+    border:1.5px solid #ffbf69;color:#8a4b00;border-radius:14px;padding:12px 18px;
+    font-size:0.88rem;font-weight:600;margin-bottom:18px;line-height:1.6;
+  }
+  .assistant-banner b{color:#5c3200;}
+  header.dash-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:26px;}
+  .dash-header-left{display:flex;align-items:center;gap:16px;}
+  .dash-logo{width:52px;height:52px;border-radius:50%;background:var(--navy);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .dash-logo svg{width:24px;height:24px;}
+  .dash-header h1{font-size:1.4rem;margin:0;}
+  .dash-header .sub{font-size:0.85rem;color:var(--text-mute);}
+  .btn-outline{border:1.5px solid #1c1c3a;background:#fff;border-radius:999px;padding:10px 22px;font-family:'Prompt',sans-serif;font-weight:600;cursor:pointer;font-size:0.9rem;}
+  .btn-outline:hover{background:#f6f8fc;}
+  .header-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn-primary{
+    border:none;border-radius:999px;padding:11px 24px;font-family:'Prompt',sans-serif;font-weight:700;
+    cursor:pointer;font-size:0.9rem;color:#fff;background:linear-gradient(90deg,#2ec5e0,#2a5be0);
+  }
+  .btn-primary:hover{opacity:0.9;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:30px;}
+  .stat-card{background:#fff;border:1.5px solid var(--card-border);border-radius:20px;padding:30px 20px 20px 20px;position:relative;text-align:center;}
+  .badge{position:absolute;top:-16px;left:50%;transform:translateX(-50%);padding:9px 22px;border-radius:999px;font-weight:700;font-size:0.85rem;color:#fff;white-space:nowrap;}
+  .badge.warm{background:var(--grad-badge-warm);} .badge.cool{background:var(--grad-badge-cool);}
+  .big-num{font-size:2.2rem;font-weight:800;margin:10px 0 2px 0;}
+  .label-sm{font-size:0.8rem;color:var(--text-mute);}
+
+  .progress-card{background:#fff;border:1.5px solid var(--card-border);border-radius:20px;padding:24px;margin-bottom:30px;}
+  .progress-card h3{margin:0 0 14px 0;font-size:1.05rem;}
+  .progress-bar-big{height:22px;border-radius:12px;background:#eef1f7;overflow:hidden;position:relative;}
+  .progress-bar-big .fill{height:100%;border-radius:12px;background:linear-gradient(90deg,#2a2ae0,#1ec8a5);display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:#fff;font-size:0.75rem;font-weight:700;transition:width .5s ease;white-space:nowrap;}
+  .progress-caption{display:flex;justify-content:space-between;margin-top:8px;font-size:0.82rem;color:var(--text-mute);}
+
+  .section-title-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:8px 0 20px 0;}
+  .section-title{display:inline-block;border:1.5px solid #1c1c3a;border-radius:999px;padding:12px 26px;font-weight:700;font-size:1.05rem;}
+
+  .planter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;}
+  .planter-card{background:#fff;border:1.5px solid var(--card-border);border-radius:18px;padding:18px 20px;position:relative;}
+  .planter-card .p-name{font-weight:700;font-size:1rem;margin-bottom:2px;}
+  .planter-card .p-phone{font-size:0.8rem;color:var(--text-mute);margin-bottom:10px;}
+  .planter-card .p-church{font-size:0.9rem;font-weight:600;color:var(--blue);margin-bottom:2px;}
+  .planter-card .p-loc{font-size:0.8rem;color:var(--text-mute);margin-bottom:10px;}
+  .planter-card .p-row{font-size:0.8rem;margin-bottom:3px;}
+  .planter-card .p-row b{color:var(--text-dark);font-weight:600;}
+  .planter-card .p-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px dashed #e5e9f2;font-size:0.75rem;color:var(--text-mute);}
+  .readiness-pill{background:#eef1fb;color:var(--blue);border-radius:999px;padding:3px 10px;font-weight:700;}
+  .manual-pill{background:#fff4e0;color:#a65f00;border-radius:999px;padding:3px 10px;font-weight:700;font-size:0.7rem;position:absolute;top:14px;right:16px;}
+  .index-badge{position:absolute;top:-12px;left:16px;background:var(--navy);color:#fff;border-radius:999px;min-width:26px;height:26px;padding:0 8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;box-shadow:0 4px 10px rgba(11,11,46,0.25);}
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--text-mute);}
+  .empty-state .big{font-size:2.5rem;margin-bottom:10px;}
+
+  .loading-overlay{
+    position:fixed;inset:0;background:rgba(255,255,255,0.75);display:none;
+    align-items:center;justify-content:center;z-index:999;font-weight:700;color:var(--navy);font-size:1.1rem;
+  }
+
+  /* modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,10,30,0.45);display:none;align-items:center;justify-content:center;z-index:900;padding:20px;}
+  .modal-card{background:#fff;border-radius:22px;padding:30px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;}
+  .modal-card h2{margin:0 0 4px 0;font-size:1.2rem;}
+  .modal-card .modal-sub{font-size:0.82rem;color:var(--text-mute);margin-bottom:20px;}
+  .form-field{margin-bottom:14px;}
+  .form-field label{display:block;font-size:0.82rem;font-weight:600;margin-bottom:6px;color:var(--text-dark);}
+  .form-field input{
+    width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--card-border);
+    font-family:'Prompt',sans-serif;font-size:0.92rem;
+  }
+  .form-field input:focus{outline:none;border-color:var(--blue);}
+  .modal-actions{display:flex;gap:10px;margin-top:22px;}
+  .modal-actions button{flex:1;padding:13px;border-radius:12px;font-family:'Prompt',sans-serif;font-weight:700;font-size:0.92rem;cursor:pointer;border:none;}
+  .modal-cancel{background:#f1f3f8;color:var(--text-dark);}
+  .modal-submit{background:linear-gradient(90deg,#2ec5e0,#2a5be0);color:#fff;}
+  .modal-msg{font-size:0.85rem;margin-top:10px;min-height:18px;font-weight:600;}
+  .modal-msg.err{color:var(--red);}
+  .modal-msg.ok{color:#1a8f4c;}
+
+  /* report form buttons */
+  .report-btn-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px;}
+  .btn-report{
+    flex:1;min-width:240px;padding:18px 22px;border-radius:16px;border:none;
+    font-family:'Prompt',sans-serif;font-weight:700;font-size:0.92rem;color:#fff;
+    cursor:pointer;text-align:center;line-height:1.5;transition:box-shadow .15s, transform .15s;
+    background:linear-gradient(135deg,#2ec5e0,#2a5be0);
+    box-shadow:0 10px 24px rgba(42,91,224,0.3);
+  }
+  .btn-report:hover{box-shadow:0 14px 30px rgba(42,91,224,0.4);transform:translateY(-2px);}
+  .btn-report:nth-child(2){background:linear-gradient(135deg,#ff9a3d,#ff4d4d);box-shadow:0 10px 24px rgba(255,77,77,0.3);}
+  .btn-report:nth-child(2):hover{box-shadow:0 14px 30px rgba(255,77,77,0.4);}
+  .btn-report:nth-child(3){background:linear-gradient(135deg,#2a2ae0,#0b0b2e);box-shadow:0 10px 24px rgba(11,11,46,0.3);}
+  .btn-report:nth-child(3):hover{box-shadow:0 14px 30px rgba(11,11,46,0.4);}
+
+  /* coming soon takeover screen */
+  .coming-soon-screen{
+    position:fixed;inset:0;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;
+    padding:40px;text-align:center;z-index:950;
+  }
+  .coming-soon-screen .big{font-size:2.5rem;margin-bottom:18px;}
+  .coming-soon-msg{font-size:1.15rem;font-weight:700;color:var(--text-dark);max-width:480px;margin-bottom:28px;line-height:1.7;}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">กำลังโหลดข้อมูล...</div>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2" fill="#fff"/></svg>
+    </div>
+    <h1>Thailand Church Planting Training Center</h1>
+    <div class="sub">ระบบสำหรับ Direct Partner และผู้ช่วย — กรอกเบอร์โทรศัพท์เพื่อเข้าดูข้อมูลกลุ่มของคุณ</div>
+    <input type="tel" id="phone-input" placeholder="เบอร์โทรศัพท์ เช่น 0812345678" maxlength="20">
+    <button id="login-btn">เข้าสู่ระบบ</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-note">
+      ข้อมูลของคุณถูกตรวจสอบและส่งกลับจากเซิร์ฟเวอร์โดยตรง<br>
+      ผู้อื่นจะไม่สามารถมองเห็นข้อมูลของกลุ่มคุณได้ แม้จะเปิดดู source code ของหน้านี้
+    </div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD SCREEN ============ -->
+<div id="dash-screen">
+  <header class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2" fill="#fff"/></svg>
+      </div>
+      <div>
+        <h1 id="org-title"></h1>
+        <div class="sub" id="leader-sub"></div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" id="add-church-btn" style="display:none;">+ เพิ่มคริสตจักร</button>
+      <button class="btn-outline" id="logout-btn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <div class="assistant-banner" id="assistant-banner"></div>
+
+  <div class="report-btn-row">
+    <button class="btn-report" data-form-idx="0">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนสิงหาคม 2569"</button>
+    <button class="btn-report" data-form-idx="1">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 2 เดือนตุลาคม 2569"</button>
+    <button class="btn-report" data-form-idx="2">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 3 เดือนมกราคม 2570"</button>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="badge warm">Goal</div><div class="big-num" id="stat-goal">-</div><div class="label-sm">คริสตจักร (เป้าหมาย)</div></div>
+    <div class="stat-card"><div class="badge cool">Seed Fund</div><div class="big-num" id="stat-seed">-</div><div class="label-sm">คริสตจักร</div></div>
+    <div class="stat-card"><div class="badge warm">พบจริงในระบบ</div><div class="big-num" id="stat-actual">-</div><div class="label-sm">คน / คริสตจักร</div></div>
+  </div>
+
+  <div class="progress-card">
+    <h3>ความคืบหน้า: พบจริง เทียบกับ Goal</h3>
+    <div class="progress-bar-big"><div class="fill" id="progress-fill" style="width:0%;"></div></div>
+    <div class="progress-caption"><span id="progress-caption-left"></span><span id="progress-caption-right"></span></div>
+  </div>
+
+  <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
+    <div class="stat-card"><div class="badge cool">เงินสนับสนุน/งวด</div><div class="big-num" id="stat-per-term" style="font-size:1.6rem;">-</div><div class="label-sm">บาท</div></div>
+    <div class="stat-card"><div class="badge warm">รวม 3 งวด</div><div class="big-num" id="stat-total-term" style="font-size:1.6rem;">-</div><div class="label-sm">บาท</div></div>
+  </div>
+
+  <div class="section-title-row">
+    <div class="section-title">รายชื่อผู้บุกเบิกคริสตจักรในเครือข่ายของคุณ</div>
+  </div>
+  <div id="planter-container"></div>
+</div>
+
+<!-- ============ ADD CHURCH MODAL ============ -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal-card">
+    <h2>เพิ่มคริสตจักรในเครือข่าย</h2>
+    <div class="modal-sub">ใช้เมื่อคริสตจักรย่อยในเครือข่ายของคุณยังไม่ได้กรอกแบบฟอร์ม CPC — ข้อมูลจะถูกบันทึกกลับเข้าชีตของคุณทันที</div>
+
+    <div class="form-field"><label>ชื่อคริสตจักร *</label><input id="f-church" placeholder="เช่น คริสตจักรแห่งพันธสัญญาบางบัวทอง"></div>
+    <div class="form-field"><label>ชื่อ-นามสกุลผู้บุกเบิก</label><input id="f-name"></div>
+    <div class="form-field"><label>เบอร์โทรศัพท์ผู้บุกเบิก</label><input id="f-phone" type="tel"></div>
+    <div class="form-field"><label>ตำบล</label><input id="f-tambon"></div>
+    <div class="form-field"><label>อำเภอ</label><input id="f-amphoe"></div>
+    <div class="form-field"><label>จังหวัด</label><input id="f-province"></div>
+    <div class="form-field"><label>ชื่อศิษยาภิบาล</label><input id="f-pastor"></div>
+    <div class="form-field"><label>ชื่อที่ปรึกษา</label><input id="f-advisor"></div>
+
+    <div class="modal-msg" id="modal-msg"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="modal-cancel-btn">ยกเลิก</button>
+      <button class="modal-submit" id="modal-submit-btn">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COMING SOON (REPORT FORM PLACEHOLDER) SCREEN ============ -->
+<div class="coming-soon-screen" id="coming-soon-screen">
+  <div class="big">🕊️</div>
+  <div class="coming-soon-msg">รอทีมงาน TCPC แจ้งวันที่เผยแพร่แบบฟอร์มนี้อีกครั้ง เพื่อเริ่มประเมินผล</div>
+  <button class="btn-outline" id="coming-soon-back-btn">กลับ</button>
+</div>
+
+<script>
+// ===== ตั้งค่า URL ของ Google Apps Script Web App (backend/API) =====
+// ถ้า deploy เวอร์ชันใหม่แล้ว URL เปลี่ยน ให้แก้ค่านี้ค่าเดียว
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwm5SgMjCiXAqdr5y3p3L8or7OkzzDSxq9ADvWFKLDk20PnoGs9-hp4UKpTEJBhytUO/exec';
+
+let currentPartner = null;
+let currentLoginPhone = null; // เบอร์ที่ใช้ล็อกอินจริง (อาจเป็นเบอร์ผู้ช่วย ไม่ใช่เบอร์ Direct Partner) ใช้รีเฟรชข้อมูลแบบเงียบๆ
+
+// เรียก backend ผ่าน fetch() แบบ POST, Content-Type: text/plain เพื่อเลี่ยง CORS preflight
+// (Apps Script ไม่รองรับ preflight OPTIONS request โดยตรง การใช้ text/plain ทำให้เบราว์เซอร์มองเป็น "simple request")
+function callApi(action, payload){
+  return fetch(WEBAPP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ action: action }, payload))
+  }).then(function(r){ return r.json(); });
+}
+
+// สร้าง/อ่านรหัสประจำเบราว์เซอร์ (สำหรับนับจำนวนครั้งที่กรอกเบอร์ผิด ป้องกันการเดาเบอร์)
+function getClientId(){
+  try {
+    var id = localStorage.getItem('dpp_client_id');
+    if(!id){
+      id = 'c_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+      localStorage.setItem('dpp_client_id', id);
+    }
+    return id;
+  } catch(e){
+    return 'c_' + Math.random().toString(36).slice(2);
+  }
+}
+
+function showLoading(v){ document.getElementById('loading-overlay').style.display = v ? 'flex' : 'none'; }
+
+function fmtVal(v){
+  if(v === null || v === undefined || v === '' || v === 'nan') return '-';
+  return v;
+}
+
+function renderDashboard(partner){
+  currentPartner = partner;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dash-screen').style.display = 'block';
+
+  document.getElementById('org-title').textContent = partner.org;
+  document.getElementById('leader-sub').textContent = partner.leader;
+
+  const banner = document.getElementById('assistant-banner');
+  if(partner.isAssistant){
+    banner.style.display = 'flex';
+    banner.innerHTML = `🤝 คุณกำลังเข้าสู่ระบบในฐานะ<b>${partner.assistantName ? ' ผู้ช่วย: ' + partner.assistantName : 'ผู้ช่วย'}</b>`
+      + ` ของ Direct Partner: <b>${partner.leader}</b> (${partner.org}) — กรุณาตรวจสอบว่าเป็นชื่อที่ถูกต้องก่อนใช้งาน`;
+  } else {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+  }
+  document.getElementById('stat-goal').textContent = fmtVal(partner.goal);
+  document.getElementById('stat-seed').textContent = fmtVal(partner.seed);
+  document.getElementById('stat-actual').textContent = partner.actual;
+  document.getElementById('stat-per-term').textContent = fmtVal(partner.perTerm);
+  document.getElementById('stat-total-term').textContent = fmtVal(partner.totalTerm);
+
+  const goalNum = parseFloat(partner.goal);
+  const pct = (!isNaN(goalNum) && goalNum > 0) ? Math.min(100, Math.round((partner.actual/goalNum)*100)) : 0;
+  const fill = document.getElementById('progress-fill');
+  setTimeout(() => { fill.style.width = pct + '%'; fill.textContent = pct > 8 ? pct + '%' : ''; }, 100);
+  document.getElementById('progress-caption-left').textContent = `พบจริง ${partner.actual} คน`;
+  document.getElementById('progress-caption-right').textContent = !isNaN(goalNum) ? `เป้าหมาย ${goalNum} คริสตจักร` : 'เป้าหมาย: รอข้อมูล';
+
+  const container = document.getElementById('planter-container');
+  if(partner.planters.length === 0){
+    container.innerHTML = `<div class="empty-state"><div class="big">📋</div>ยังไม่พบข้อมูลผู้บุกเบิกในเครือข่ายนี้<br>กดปุ่ม "+ เพิ่มคริสตจักร" ด้านบนเพื่อเริ่มบันทึกได้เลย</div>`;
+    return;
+  }
+  container.innerHTML = `<div class="planter-grid">` + partner.planters.map((p, idx) => `
+    <div class="planter-card">
+      <span class="index-badge">${idx + 1}</span>
+      ${p.source === 'manual' ? '<span class="manual-pill">เพิ่มเอง</span>' : ''}
+      <div class="p-name">${p.name || '-'}</div>
+      <div class="p-phone">📞 ${p.phone || '-'}</div>
+      <div class="p-church">${p.church || '-'}</div>
+      <div class="p-loc">${[p.tambon, p.amphoe, p.province].filter(Boolean).join(' / ') || '-'}</div>
+      <div class="p-row"><b>คริสตจักรแม่:</b> ${p.mother_church || '-'}</div>
+      <div class="p-row"><b>ศิษยาภิบาล:</b> ${p.pastor || '-'}</div>
+      <div class="p-row"><b>ที่ปรึกษา:</b> ${p.advisor || '-'}</div>
+      <div class="p-footer">
+        <span>${p.date || '-'}</span>
+        ${p.readiness !== null && p.readiness !== undefined ? `<span class="readiness-pill">ความมั่นใจ ${p.readiness}/3</span>` : ''}
+      </div>
+    </div>
+  `).join('') + `</div>`;
+}
+
+function attemptLogin(){
+  const val = document.getElementById('phone-input').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  errEl.textContent = '';
+  btn.disabled = true;
+  showLoading(true);
+
+  callApi('checkLogin', { phone: val, clientId: getClientId() })
+    .then(function(res){
+      showLoading(false);
+      btn.disabled = false;
+      if(res.success){
+        currentLoginPhone = val;
+        renderDashboard(res.partner);
+      } else {
+        errEl.textContent = res.message || 'ไม่พบเบอร์นี้ในระบบ';
+      }
+    })
+    .catch(function(err){
+      showLoading(false);
+      btn.disabled = false;
+      errEl.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || err);
+    });
+}
+
+// ===== ปุ่มแบบฟอร์มประเมินผลคริสตจักร (แก้ URL ตรงนี้เมื่อฟอร์มพร้อมเผยแพร่จริง) =====
+// ถ้าค่าเป็น '#' (ยังไม่พร้อม) ระบบจะพาไปหน้า "รอทีมงาน TCPC แจ้งวันที่..." แทนการเปิดฟอร์ม
+const REPORT_FORM_URLS = [
+  '#', // ครั้งที่ 1 เดือนสิงหาคม 2569
+  '#', // ครั้งที่ 2 เดือนตุลาคม 2569
+  '#'  // ครั้งที่ 3 เดือนมกราคม 2570
+];
+
+document.querySelectorAll('.btn-report').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    const idx = parseInt(btn.getAttribute('data-form-idx'), 10);
+    const url = REPORT_FORM_URLS[idx];
+    if(!url || url === '#'){
+      document.getElementById('coming-soon-screen').style.display = 'flex';
+    } else {
+      window.open(url, '_blank');
+    }
+  });
+});
+document.getElementById('coming-soon-back-btn').addEventListener('click', () => {
+  document.getElementById('coming-soon-screen').style.display = 'none';
+});
+
+document.getElementById('login-btn').addEventListener('click', attemptLogin);
+document.getElementById('phone-input').addEventListener('keydown', (e) => { if(e.key === 'Enter') attemptLogin(); });
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  currentPartner = null;
+  currentLoginPhone = null;
+  document.getElementById('dash-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('phone-input').value = '';
+  document.getElementById('login-error').textContent = '';
+});
+
+/* ===== Add church modal ===== */
+const backdrop = document.getElementById('modal-backdrop');
+document.getElementById('add-church-btn').addEventListener('click', () => {
+  document.getElementById('modal-msg').textContent = '';
+  document.getElementById('modal-msg').className = 'modal-msg';
+  ['f-church','f-name','f-phone','f-tambon','f-amphoe','f-province','f-pastor','f-advisor'].forEach(id => document.getElementById(id).value = '');
+  backdrop.style.display = 'flex';
+});
+document.getElementById('modal-cancel-btn').addEventListener('click', () => backdrop.style.display = 'none');
+backdrop.addEventListener('click', (e) => { if(e.target === backdrop) backdrop.style.display = 'none'; });
+
+document.getElementById('modal-submit-btn').addEventListener('click', () => {
+  const churchData = {
+    church: document.getElementById('f-church').value.trim(),
+    name: document.getElementById('f-name').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    tambon: document.getElementById('f-tambon').value.trim(),
+    amphoe: document.getElementById('f-amphoe').value.trim(),
+    province: document.getElementById('f-province').value.trim(),
+    pastor: document.getElementById('f-pastor').value.trim(),
+    advisor: document.getElementById('f-advisor').value.trim(),
+    mother_church: currentPartner ? currentPartner.org : ''
+  };
+  const msgEl = document.getElementById('modal-msg');
+  if(!churchData.church){
+    msgEl.textContent = 'กรุณากรอกชื่อคริสตจักร'; msgEl.className = 'modal-msg err';
+    return;
+  }
+  document.getElementById('modal-submit-btn').disabled = true;
+  msgEl.textContent = 'กำลังบันทึก...'; msgEl.className = 'modal-msg';
+
+  callApi('addChurch', { sheetName: currentPartner.sheetName, churchData: churchData })
+    .then(function(res){
+      document.getElementById('modal-submit-btn').disabled = false;
+      if(res.success){
+        msgEl.textContent = 'บันทึกสำเร็จ ✅'; msgEl.className = 'modal-msg ok';
+        setTimeout(() => {
+          backdrop.style.display = 'none';
+          attemptLoginSilently();
+        }, 700);
+      } else {
+        msgEl.textContent = res.message || 'บันทึกไม่สำเร็จ'; msgEl.className = 'modal-msg err';
+      }
+    })
+    .catch(function(err){
+      document.getElementById('modal-submit-btn').disabled = false;
+      msgEl.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || err); msgEl.className = 'modal-msg err';
+    });
+});
+
+// รีเฟรชข้อมูลหลังเพิ่มคริสตจักรสำเร็จ โดยใช้เบอร์เดิมที่ล็อกอินอยู่ (ไม่ต้องขอกรอกใหม่)
+// ใช้ currentLoginPhone (เบอร์ที่พิมพ์ล็อกอินจริง) ไม่ใช่ currentPartner.contact เพราะถ้าล็อกอินด้วยเบอร์ผู้ช่วย
+// currentPartner.contact จะเป็นเบอร์ของ Direct Partner ไม่ใช่เบอร์ผู้ช่วย ทำให้ log กลับเข้าผิดโหมดได้
+function attemptLoginSilently(){
+  if(!currentLoginPhone) return;
+  showLoading(true);
+  callApi('checkLogin', { phone: currentLoginPhone, clientId: getClientId() })
+    .then(function(res){
+      showLoading(false);
+      if(res.success) renderDashboard(res.partner);
+    })
+    .catch(function(){ showLoading(false); });
+}
+</script>
+
+</body>
+</html>
