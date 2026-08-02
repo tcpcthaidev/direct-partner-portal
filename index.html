@@ -135,6 +135,57 @@
   .btn-report:nth-child(3){background:linear-gradient(135deg,#2a2ae0,#0b0b2e);box-shadow:0 10px 24px rgba(11,11,46,0.3);}
   .btn-report:nth-child(3):hover{box-shadow:0 14px 30px rgba(11,11,46,0.4);}
 
+  /* GCA sub-form menu */
+  .btn-report .sub-badge{
+    display:none;margin-top:10px;padding:5px 14px;border-radius:999px;
+    background:rgba(255,255,255,0.22);font-size:0.76rem;font-weight:600;
+    align-items:center;gap:7px;backdrop-filter:blur(2px);
+  }
+  .btn-report.has-sub .sub-badge{display:inline-flex;}
+  .btn-report .sub-badge b{font-size:0.68rem;display:inline-block;transition:transform .2s;}
+  .btn-report.sub-open .sub-badge b{transform:rotate(180deg);}
+
+  .gca-form-panel{
+    display:none;background:#fff;border:1.5px solid var(--card-border);border-radius:20px;
+    padding:22px 24px 24px;margin-top:-16px;margin-bottom:30px;
+    box-shadow:0 14px 34px rgba(11,11,46,0.10);animation:gcaPanelIn .22s ease;
+  }
+  @keyframes gcaPanelIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:none;}}
+  .gca-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .gca-panel-title{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.02rem;color:var(--navy);line-height:1.4;}
+  .gca-panel-title .dot{width:10px;height:10px;border-radius:50%;flex:none;background:linear-gradient(135deg,#2ec5e0,#2a5be0);}
+  .gca-panel-close{
+    flex:none;border:1px solid var(--card-border);background:#f7f9fc;color:var(--text-mute);
+    width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:0.9rem;line-height:1;
+    font-family:'Prompt',sans-serif;transition:background .15s,color .15s;
+  }
+  .gca-panel-close:hover{background:#eef2f8;color:var(--text-dark);}
+  .gca-panel-note{font-size:0.84rem;color:var(--text-mute);margin:6px 0 16px;}
+  .gca-form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px;}
+  .gca-form-item{
+    display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text-dark);
+    background:#f7f9fc;border:1.5px solid var(--card-border);border-radius:14px;padding:13px 15px;
+    transition:border-color .15s,background .15s,transform .15s,box-shadow .15s;
+  }
+  .gca-form-item:hover{background:#fff;border-color:#2a5be0;transform:translateY(-2px);box-shadow:0 10px 22px rgba(42,91,224,0.16);}
+  .gca-form-item.primary{background:linear-gradient(135deg,#fff4ec,#ffeaea);border-color:#ffd0bb;}
+  .gca-form-item.primary:hover{border-color:#ff7a3d;box-shadow:0 10px 22px rgba(255,122,61,0.20);}
+  .gca-form-num{
+    flex:none;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:0.82rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#2ec5e0,#2a5be0);
+  }
+  .gca-form-item.primary .gca-form-num{background:linear-gradient(135deg,#ff9a3d,#ff4d4d);}
+  .gca-form-text{flex:1;min-width:0;}
+  .gca-form-name{display:block;font-weight:700;font-size:0.9rem;line-height:1.35;}
+  .gca-form-desc{display:block;font-size:0.75rem;color:var(--text-mute);margin-top:2px;}
+  .gca-form-arrow{flex:none;color:#9aa6b8;font-size:1rem;transition:color .15s;}
+  .gca-form-item:hover .gca-form-arrow{color:#2a5be0;}
+  .gca-form-item.primary:hover .gca-form-arrow{color:#ff7a3d;}
+  @media(max-width:640px){
+    .gca-form-panel{padding:18px 16px 20px;margin-top:-10px;}
+    .gca-form-grid{grid-template-columns:1fr;}
+  }
+
   /* coming soon takeover screen */
   .coming-soon-screen{
     position:fixed;inset:0;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -187,9 +238,18 @@
   <div class="assistant-banner" id="assistant-banner"></div>
 
   <div class="report-btn-row">
-    <button class="btn-report" data-form-idx="0">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนสิงหาคม 2569"</button>
+    <button class="btn-report" id="btn-report-1" data-form-idx="0">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนสิงหาคม 2569"<br><span class="sub-badge">เลือกแบบฟอร์ม 11 รายการ <b>&#9660;</b></span></button>
     <button class="btn-report" data-form-idx="1">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 2 เดือนตุลาคม 2569"</button>
     <button class="btn-report" data-form-idx="2">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 3 เดือนมกราคม 2570"</button>
+  </div>
+
+  <div class="gca-form-panel" id="gca-form-panel">
+    <div class="gca-panel-head">
+      <div class="gca-panel-title"><span class="dot"></span>เลือกแบบฟอร์มประเมินผล ครั้งที่ 1 (สิงหาคม 2569)</div>
+      <button class="gca-panel-close" id="gca-panel-close" title="ปิด">&#10005;</button>
+    </div>
+    <div class="gca-panel-note">เลือกแบบฟอร์มตามกลุ่มคริสตจักรของท่าน — คลิกเพื่อเปิดฟอร์มในแท็บใหม่</div>
+    <div class="gca-form-grid" id="gca-form-grid"></div>
   </div>
 
   <div class="stat-grid">
@@ -286,6 +346,7 @@ function fmtVal(v){
 
 function renderDashboard(partner){
   currentPartner = partner;
+  setGcaFormMenuAvailability(partner);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('dash-screen').style.display = 'block';
 
@@ -372,9 +433,74 @@ const REPORT_FORM_URLS = [
   '#'  // ครั้งที่ 3 เดือนมกราคม 2570
 ];
 
+/* ลิงก์แบบฟอร์มประเมิน ครั้งที่ 1 (แสดงเฉพาะผู้ใช้กลุ่ม GCA) */
+const GCA_FORM_LINKS = [
+  { name: 'รวม GCA', desc: 'ที่แยก 10 Partner หลัก', url: 'https://docs.google.com/forms/d/e/1FAIpQLSeah9y-NOKI_c9YU7O6Dd3IhDv2l4TmKcBYwmlP5BpUP45QHQ/viewform' },
+  { name: 'ศิโยนฯ', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSefUurfkgevRtfn4tJOoNoBZOAL3q9slCUD1zI9WiLUiwRu0A/viewform' },
+  { name: 'พลังรักพระคริสต์', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSdYZ-YVOCOx7klI1ViizMXoe60UufGOBr7SAf4GwTh_VjeN6g/viewform' },
+  { name: 'มหาชล', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSdR6SjzfnNt9nM26Dr7zUwaqXrLE5wsmlFtlhEplfRQjh97Og/viewform' },
+  { name: 'โฮซันนา', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLScjTzX33OjyfD_8b9v6umKMTfV5D9Oj7TQFDLvJdB9QkZV67w/viewform' },
+  { name: 'แห่งนิมิตร', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSffoxuV_XY6gdKre_e6MuvKS2u5alQBYUEkqoO6X75kWm_XHg/viewform' },
+  { name: 'ธารแห่งชีวิต', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSdilSt9kGh5hWF0Iy4X9sc-2QMZTTgk5yGNIRSNVf_flU95Lw/viewform' },
+  { name: 'มิติใหม่ฯ', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSdFG5Zl-3WwJYRfMqh7a0EbKCNVuthdKqR6gO8bE06xwq10hQ/viewform' },
+  { name: 'แห่งการเจิม', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSdQvhhGPX1SUFK0Mh5HT7cbHh0NYJvUAPhb5JIPz4NGX537kQ/viewform' },
+  { name: 'แห่งพระสิริฯ', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLScUGexJv_sz4kwiNgg396LusJbafTM2I6XMaSWs986dW7FNOQ/viewform' },
+  { name: 'พันธกรทั้ง 5', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSfeFzKvLy85Y_9ClW2Nyi-J4wCXDuKzxCo8Xn-tzoQQ7US74Q/viewform' }
+];
+
+function isGcaPartner(p){
+  if(!p) return false;
+  const org = String(p.org || '').trim().toUpperCase();
+  const leader = String(p.leader || '');
+  return org === 'GCA' || leader.indexOf('วีระเดช จิตศักดานนท์') !== -1;
+}
+
+function buildGcaFormMenu(){
+  const grid = document.getElementById('gca-form-grid');
+  if(!grid || grid.getAttribute('data-built') === '1') return;
+  grid.innerHTML = GCA_FORM_LINKS.map(function(f, i){
+    return '<a class="gca-form-item' + (i === 0 ? ' primary' : '') + '" href="' + f.url + '" target="_blank" rel="noopener noreferrer">'
+      + '<span class="gca-form-num">' + (i + 1) + '</span>'
+      + '<span class="gca-form-text"><span class="gca-form-name">' + f.name + '</span>'
+      + (f.desc ? '<span class="gca-form-desc">' + f.desc + '</span>' : '')
+      + '</span><span class="gca-form-arrow">&#8599;</span></a>';
+  }).join('');
+  grid.setAttribute('data-built', '1');
+}
+
+/* เรียกทุกครั้งที่เข้าสู่ระบบสำเร็จ: เปิดเมนูย่อยเฉพาะกลุ่ม GCA และรีเซ็ตสถานะเปิด/ปิด */
+function setGcaFormMenuAvailability(partner){
+  const btn = document.getElementById('btn-report-1');
+  const panel = document.getElementById('gca-form-panel');
+  if(!btn || !panel) return;
+  panel.style.display = 'none';
+  btn.classList.remove('sub-open');
+  if(isGcaPartner(partner)){
+    btn.classList.add('has-sub');
+    buildGcaFormMenu();
+  } else {
+    btn.classList.remove('has-sub');
+  }
+}
+
+function toggleGcaFormMenu(force){
+  const btn = document.getElementById('btn-report-1');
+  const panel = document.getElementById('gca-form-panel');
+  if(!btn || !panel) return;
+  const open = (typeof force === 'boolean') ? force : (panel.style.display !== 'block');
+  panel.style.display = open ? 'block' : 'none';
+  if(open){ btn.classList.add('sub-open'); } else { btn.classList.remove('sub-open'); }
+  if(open){ panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+
 document.querySelectorAll('.btn-report').forEach(function(btn){
   btn.addEventListener('click', function(){
     const idx = parseInt(btn.getAttribute('data-form-idx'), 10);
+    if(idx === 0 && isGcaPartner(currentPartner)){
+      toggleGcaFormMenu();
+      return;
+    }
+    toggleGcaFormMenu(false);
     const url = REPORT_FORM_URLS[idx];
     if(!url || url === '#'){
       document.getElementById('coming-soon-screen').style.display = 'flex';
@@ -382,6 +508,10 @@ document.querySelectorAll('.btn-report').forEach(function(btn){
       window.open(url, '_blank');
     }
   });
+});
+
+document.getElementById('gca-panel-close').addEventListener('click', function(){
+  toggleGcaFormMenu(false);
 });
 document.getElementById('coming-soon-back-btn').addEventListener('click', () => {
   document.getElementById('coming-soon-screen').style.display = 'none';
