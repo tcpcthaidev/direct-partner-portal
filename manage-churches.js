@@ -115,6 +115,80 @@
     return { name: t('.p-name'), phone: t('.p-phone'), church: t('.p-church') };
   }
 
+  /* ---- ซ่อนรายการที่เคยลบไว้แล้ว ตอนโหลดหน้าใหม่ ----
+   * หลังบ้านตัวเดิมไม่รู้จักคอลัมน์ "สถานะการลบ" จึงส่งรายการที่ลบไปแล้วกลับมาด้วยเสมอ
+   * ส่วนนี้จึงถามรายการที่ถูกลบแล้วซ่อนการ์ดให้ตรงกัน ถ้าถามไม่สำเร็จจะไม่ซ่อนอะไรเลย */
+
+  function normPhoneKey(s) {
+    return String(s || '').replace(/\D/g, '').replace(/^0+/, '');
+  }
+
+  function normTextKey(s) {
+    return String(s || '').replace(/\s+/g, '').toLowerCase();
+  }
+
+  /** การ์ดตรงกับรายการที่ถูกลบหรือไม่
+   *  ปกติเทียบด้วยเบอร์คู่กับชื่อ ถ้ารายการนั้นไม่มีเบอร์จึงถอยไปเทียบชื่อคู่กับชื่อคริสตจักร
+   *  ตั้งใจให้เข้มไว้ก่อน เพราะซ่อนผิดใบแย่กว่าซ่อนไม่ครบ */
+  function matchesDeleted(info, d) {
+    var dp = normPhoneKey(d.phone);
+    var ip = normPhoneKey(info.phone);
+    var dn = normTextKey(d.name);
+    var inm = normTextKey(info.name);
+    if (dp && ip) return dp === ip && dn === inm;
+    return dn === inm && normTextKey(d.church) === normTextKey(info.church);
+  }
+
+  function syncDeleted() {
+    if (!loginPhone() || !grid()) return;
+    api({ action: 'listDeleted' }).then(function (res) {
+      if (!res || !res.success || !res.items || !res.items.length) return;
+      var all = Array.prototype.slice.call(grid().querySelectorAll('.planter-card'));
+      var hidden = 0;
+      all.forEach(function (c) {
+        if (c.classList.contains(NS + '-gone')) return;
+        var info = cardInfo(c);
+        for (var i = 0; i < res.items.length; i++) {
+          if (matchesDeleted(info, res.items[i])) {
+            c.classList.add(NS + '-gone');
+            c.style.display = 'none';
+            hidden++;
+            return;
+          }
+        }
+      });
+      if (hidden) {
+        renumber();
+        updateCount();
+      }
+    }).catch(function () { /* ถามไม่ได้ก็ไม่ซ่อน ปล่อยให้หน้าเว็บทำงานตามปกติ */ });
+  }
+
+  /** ปรับตัวเลขสรุปด้านบนให้ตรงกับจำนวนการ์ดที่แสดงจริง
+   *  ไม่งั้นลบไปแล้วการ์ดหายแต่ยอด "พบจริงในระบบ" ยังค้างเลขเดิม ดูแล้วสับสน */
+  function updateCount() {
+    try {
+      var n = cards().length;
+
+      var actual = document.getElementById('stat-actual');
+      if (actual) actual.textContent = String(n);
+
+      var capLeft = document.getElementById('progress-caption-left');
+      if (capLeft) capLeft.textContent = 'พบจริง ' + n + ' คน';
+
+      var goalEl = document.getElementById('stat-goal');
+      var fill = document.getElementById('progress-fill');
+      if (goalEl && fill) {
+        var goal = parseInt(String(goalEl.textContent).replace(/[^0-9]/g, ''), 10);
+        if (goal > 0) {
+          var pct = Math.min(100, Math.round((n / goal) * 100));
+          fill.style.width = pct + '%';
+          if (/%/.test(fill.textContent)) fill.textContent = pct + '%';
+        }
+      }
+    } catch (e) {}
+  }
+
   /**
    * อ่านเบอร์ที่ล็อกอินไว้จากหน้าเว็บเดิม
    * หน้าเว็บเก็บไว้ในตัวแปร currentLoginPhone เป็นหลัก จึงอ่านตัวนั้นก่อนเสมอ
@@ -313,6 +387,7 @@
           i.el.style.display = 'none';
         });
         renumber();
+        updateCount();
         exitMode();
         showUndo(res.deleted, (res.items || []).map(function (x) { return x.uid; }),
           list.map(function (i) { return i.el; }));
@@ -351,6 +426,7 @@
             e.style.display = '';
           });
           renumber();
+          updateCount();
           alertBox('กู้คืน ' + (res.restored || 0) + ' รายการกลับมาแล้ว');
         } else {
           alertBox((res && res.message) || 'กู้คืนไม่สำเร็จ');
@@ -444,7 +520,28 @@
       refresh();
     });
 
+    syncDeleted();
+    watchGrid();
+
     return true;
+  }
+
+  /** ถ้าผู้ใช้ออกจากระบบแล้วเข้าใหม่ หน้าเว็บจะสร้างการ์ดชุดใหม่ทั้งหมด
+   *  จึงต้องซ่อนรายการที่ถูกลบซ้ำอีกครั้งทุกครั้งที่รายการถูกวาดใหม่ */
+  function watchGrid() {
+    var g = grid();
+    if (!g || g.getAttribute('data-' + NS + '-watch')) return;
+    g.setAttribute('data-' + NS + '-watch', '1');
+    try {
+      var timer = null;
+      new MutationObserver(function (muts) {
+        var added = false;
+        muts.forEach(function (m) { if (m.addedNodes && m.addedNodes.length) added = true; });
+        if (!added) return;
+        clearTimeout(timer);
+        timer = setTimeout(syncDeleted, 400);
+      }).observe(g, { childList: true });
+    } catch (e) {}
   }
 
   function init() {
