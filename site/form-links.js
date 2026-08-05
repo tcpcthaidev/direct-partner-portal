@@ -24,8 +24,9 @@
     ENDPOINT: 'https://script.google.com/macros/s/AKfycbx3DyFpClo8GyUpyPQL0VkH0dHO8PODtL_rqnoVFmEFh1VaI0j29jXeBtK8pbM3r6g0Zw/exec',
     POLL_MS: 1000,
     MAX_TRIES: 240,
-    RETRY_MS: [2000, 5000, 10000],   // ถ้าดึงไม่สำเร็จ ให้รอแล้วลองใหม่ตามลำดับนี้
-    REFRESH_MIN_MS: 30000            // กลับมาที่แท็บนี้แล้วดึงใหม่ได้เร็วสุดทุกกี่มิลลิวินาที
+    RETRY_MS: [2000, 5000, 10000, 20000, 30000],  // ถ้าดึงไม่สำเร็จ ให้รอแล้วลองใหม่ตามลำดับนี้
+    REFRESH_MIN_MS: 30000,           // กลับมาที่แท็บนี้แล้วดึงใหม่ได้เร็วสุดทุกกี่มิลลิวินาที
+    CACHE_KEY: 'mcfl.links.v1'       // ที่เก็บลิงก์ครั้งล่าสุดไว้ในเครื่อง
   };
 
   var NS = 'mcfl';
@@ -84,6 +85,30 @@
 
   function clearUrls() { setUrls([[], [], []]); }
 
+  /* เก็บลิงก์ครั้งล่าสุดของแต่ละเบอร์ไว้ในเครื่อง
+     เพราะสคริปต์ฝั่ง Google ถ้าไม่ได้ถูกเรียกมานานจะใช้เวลาตอบกลับถึงครึ่งนาที
+     ระหว่างนั้นปุ่มจะขึ้นว่า "เร็ว ๆ นี้" ทั้งที่มีลิงก์แล้ว ผู้ใช้กดรีเฟรชก็ยังไม่ทันเห็น
+     จึงเอาของครั้งก่อนขึ้นให้ใช้ได้ทันที แล้วค่อยดึงของจริงมาทับเมื่อได้คำตอบ */
+  function cacheRead(phone) {
+    try {
+      var raw = window.localStorage.getItem(CONFIG.CACHE_KEY);
+      if (!raw) return null;
+      var all = JSON.parse(raw);
+      var hit = all && all[phone];
+      return (hit && hit.rounds) ? hit.rounds : null;
+    } catch (e) { return null; }
+  }
+
+  function cacheWrite(phone, rounds) {
+    try {
+      var raw = window.localStorage.getItem(CONFIG.CACHE_KEY);
+      var all = raw ? JSON.parse(raw) : {};
+      if (!all || typeof all !== 'object') all = {};
+      all[phone] = { rounds: rounds, at: Date.now() };
+      window.localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
   function chooser(list) {
     var ov = el('div', NS + '-ov');
     var modal = el('div', NS + '-modal');
@@ -135,7 +160,12 @@
       body: JSON.stringify({ action: 'formLinks', phone: phone })
     }).then(function (r) { return r.json(); }).then(function (res) {
       if (loginPhone() !== phone) { state.busy = false; return; }   // ผู้ใช้เปลี่ยนไปแล้วระหว่างรอ
-      if (res && res.success) { state.busy = false; setUrls(res.rounds); return; }
+      if (res && res.success) {
+        state.busy = false;
+        setUrls(res.rounds);
+        cacheWrite(phone, res.rounds);
+        return;
+      }
       again(phone, attempt);
     }).catch(function () {
       again(phone, attempt);
@@ -182,6 +212,10 @@
         fetchLinks(p);
       });
 
+      /* ปลุกสคริปต์ฝั่ง Google ตั้งแต่ตอนเปิดหน้าเว็บ ระหว่างที่ผู้ใช้ยังพิมพ์เบอร์อยู่
+         พอเข้าสู่ระบบเสร็จ คำขอจริงจะได้ไม่ต้องรอเครื่องบูตอีกรอบ */
+      try { fetch(CONFIG.ENDPOINT, { method: 'GET' }).catch(function () {}); } catch (e0) {}
+
       var tries = 0;
       setInterval(function () {
         tries++;
@@ -189,7 +223,8 @@
         var p = loginPhone();
         if (p === state.phone) return;
         state.phone = p;
-        clearUrls();
+        var cached = p ? cacheRead(p) : null;
+        if (cached) setUrls(cached); else clearUrls();
         if (p) fetchLinks(p);
       }, CONFIG.POLL_MS);
     } catch (e) {
