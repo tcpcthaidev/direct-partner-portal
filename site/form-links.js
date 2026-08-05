@@ -23,11 +23,13 @@
   var CONFIG = {
     ENDPOINT: 'https://script.google.com/macros/s/AKfycbx3DyFpClo8GyUpyPQL0VkH0dHO8PODtL_rqnoVFmEFh1VaI0j29jXeBtK8pbM3r6g0Zw/exec',
     POLL_MS: 1000,
-    MAX_TRIES: 240
+    MAX_TRIES: 240,
+    RETRY_MS: [2000, 5000, 10000],   // ถ้าดึงไม่สำเร็จ ให้รอแล้วลองใหม่ตามลำดับนี้
+    REFRESH_MIN_MS: 30000            // กลับมาที่แท็บนี้แล้วดึงใหม่ได้เร็วสุดทุกกี่มิลลิวินาที
   };
 
   var NS = 'mcfl';
-  var state = { phone: '', rounds: [[], [], []], busy: false };
+  var state = { phone: '', rounds: [[], [], []], busy: false, busyPhone: '', lastFetch: 0 };
 
   var CSS = [
     '.' + NS + '-ov{position:fixed;inset:0;background:rgba(16,24,40,.62);z-index:99999;display:flex;',
@@ -117,20 +119,36 @@
     ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
   }
 
-  function fetchLinks(phone) {
-    if (state.busy) return;
+  /* ดึงลิงก์ของเบอร์นี้ ถ้าพลาดให้ลองใหม่อีกสองสามครั้ง
+     จำเป็นเพราะ Apps Script ที่ไม่ได้ถูกเรียกมาสักพักจะตอบช้าหรือตอบไม่ใช่ JSON ในครั้งแรก
+     ถ้าปล่อยให้พลาดเงียบ ๆ ผู้ใช้จะเห็นปุ่มขึ้นว่า "เร็ว ๆ นี้" ทั้งที่ในสเปรดชีตมีลิงก์อยู่แล้ว */
+  function fetchLinks(phone, attempt) {
+    attempt = attempt || 0;
+    if (attempt === 0 && state.busy && state.busyPhone === phone) return;
     state.busy = true;
+    state.busyPhone = phone;
+    state.lastFetch = Date.now();
+
     fetch(CONFIG.ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'formLinks', phone: phone })
     }).then(function (r) { return r.json(); }).then(function (res) {
-      state.busy = false;
-      if (loginPhone() !== phone) return;          // ผู้ใช้เปลี่ยนไปแล้วระหว่างรอ
-      if (res && res.success) setUrls(res.rounds);
+      if (loginPhone() !== phone) { state.busy = false; return; }   // ผู้ใช้เปลี่ยนไปแล้วระหว่างรอ
+      if (res && res.success) { state.busy = false; setUrls(res.rounds); return; }
+      again(phone, attempt);
     }).catch(function () {
-      state.busy = false;                          // ดึงไม่ได้ก็ปล่อยเป็น "เร็ว ๆ นี้" ตามเดิม
+      again(phone, attempt);
     });
+  }
+
+  function again(phone, attempt) {
+    var delay = CONFIG.RETRY_MS[attempt];
+    if (delay === undefined || loginPhone() !== phone) {
+      state.busy = false;                          // หมดโควตาแล้วก็ปล่อยเป็น "เร็ว ๆ นี้" ตามเดิม
+      return;
+    }
+    setTimeout(function () { fetchLinks(phone, attempt + 1); }, delay);
   }
 
   function init() {
@@ -153,6 +171,16 @@
           chooser(list);
         }
       }, true);
+
+      /* ถ้าทีมงานเพิ่งใส่ลิงก์ในสเปรดชีตขณะที่ผู้ใช้เปิดหน้านี้ค้างไว้ พอกลับมาที่แท็บนี้ให้ดึงใหม่
+         ผู้ใช้จึงไม่ต้องรีเฟรชเองก็เห็นลิงก์ใหม่ */
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) return;
+        var p = loginPhone();
+        if (!p || p !== state.phone) return;
+        if (Date.now() - state.lastFetch < CONFIG.REFRESH_MIN_MS) return;
+        fetchLinks(p);
+      });
 
       var tries = 0;
       setInterval(function () {
