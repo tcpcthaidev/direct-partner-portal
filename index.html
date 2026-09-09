@@ -193,6 +193,27 @@
   }
   .coming-soon-screen .big{font-size:2.5rem;margin-bottom:18px;}
   .coming-soon-msg{font-size:1.15rem;font-weight:700;color:var(--text-dark);max-width:480px;margin-bottom:28px;line-height:1.7;}
+  /* ===== แถบมุมมอง รอบที่ 1 ===== */
+  .view-tabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .view-tab{border:none;border-radius:999px;padding:11px 18px;font-family:'Prompt',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;opacity:0.55;transition:opacity .15s;}
+  .view-tab.active,.view-tab:hover{opacity:1;}
+  .view-tab.eval{background:#7c3aed;color:#fff;}
+  .view-tab.report{background:#f5c26b;color:#4a2b00;}
+  .view-tab.roster{background:#fff;border:1.5px solid #1c1c3a;color:#1c1c3a;}
+  .r1-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 18px 0;font-size:0.85rem;color:var(--text-mute);}
+  .r1-toolbar select{padding:9px 12px;border-radius:10px;border:1.5px solid var(--card-border);font-family:'Prompt',sans-serif;font-size:0.9rem;}
+  .r1-card{background:#fff;border:1.5px solid var(--card-border);border-radius:18px;padding:18px 20px 14px 20px;position:relative;margin-bottom:16px;}
+  .r1-card.muted{background:#f7f9fc;color:var(--text-mute);}
+  .r1-card .r1-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;margin-bottom:6px;}
+  .r1-card .r1-name{font-weight:700;font-size:1rem;}
+  .r1-card .r1-church{font-size:0.9rem;font-weight:600;color:var(--blue);}
+  .r1-card .r1-status{font-size:0.75rem;color:var(--text-mute);}
+  .r1-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px 18px;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e9f2;}
+  .r1-fields .f{font-size:0.8rem;}
+  .r1-fields .f b{display:block;color:var(--text-dark);font-weight:600;margin-bottom:1px;}
+  .r1-fields .f.wide{grid-column:1 / -1;}
+  .r1-sub{font-size:0.78rem;color:var(--text-mute);margin-top:12px;}
+  .r1-empty{text-align:center;padding:40px 10px;color:var(--text-mute);}
 </style>
 </head>
 <body>
@@ -270,9 +291,14 @@
   </div>
 
   <div class="section-title-row">
-    <div class="section-title">รายชื่อผู้บุกเบิกคริสตจักรในเครือข่ายของคุณ</div>
+    <div class="view-tabs">
+      <button class="view-tab roster active" data-view="roster">รายชื่อผู้บุกเบิกคริสตจักรในเครือข่ายของคุณ</button>
+      <button class="view-tab eval" data-view="eval">ประเมินผลรอบที่ 1 Direct Partner</button>
+      <button class="view-tab report" data-view="report">รายงานผลรอบที่ 1 Church Planter</button>
+    </div>
   </div>
   <div id="planter-container"></div>
+  <div id="round1-container" style="display:none;"></div>
 </div>
 
 <!-- ============ ADD CHURCH MODAL ============ -->
@@ -382,7 +408,7 @@ function renderDashboard(partner){
   }
   container.innerHTML = `<div class="planter-grid">` + partner.planters.map((p, idx) => `
     <div class="planter-card">
-      <span class="index-badge">${idx + 1}</span>
+      <span class="index-badge">${p.no || (idx + 1)}</span>
       ${p.source === 'manual' ? '<span class="manual-pill">เพิ่มเอง</span>' : ''}
       <div class="p-name">${p.name || '-'}</div>
       <div class="p-phone">📞 ${p.phone || '-'}</div>
@@ -523,6 +549,7 @@ document.getElementById('phone-input').addEventListener('keydown', (e) => { if(e
 document.getElementById('logout-btn').addEventListener('click', () => {
   currentPartner = null;
   currentLoginPhone = null;
+  resetRound1();
   document.getElementById('dash-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('phone-input').value = '';
@@ -578,6 +605,85 @@ document.getElementById('modal-submit-btn').addEventListener('click', () => {
       msgEl.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || err); msgEl.className = 'modal-msg err';
     });
 });
+
+// ===================== มุมมอง รอบที่ 1 =====================
+const R1_TITLE = { eval: 'ประเมินผลรอบที่ 1 Direct Partner', report: 'รายงานผลรอบที่ 1 Church Planter' };
+let r1Cache = { eval: null, report: null };
+let r1View = 'roster';
+
+document.querySelectorAll('.view-tab').forEach(function(btn){
+  btn.addEventListener('click', function(){ switchView(btn.getAttribute('data-view')); });
+});
+
+function switchView(view){
+  r1View = view;
+  document.querySelectorAll('.view-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view') === view); });
+  const roster = document.getElementById('planter-container');
+  const r1 = document.getElementById('round1-container');
+  if(view === 'roster'){ roster.style.display = 'block'; r1.style.display = 'none'; return; }
+  roster.style.display = 'none'; r1.style.display = 'block';
+  if(r1Cache[view]){ renderRound1(r1Cache[view]); return; }
+  r1.innerHTML = '<div class="r1-empty">กำลังโหลด' + R1_TITLE[view] + '…</div>';
+  callApi('getRound1', { phone: currentLoginPhone, clientId: getClientId(), kind: view })
+    .then(function(res){
+      if(!res.success){ r1.innerHTML = '<div class="r1-empty">' + (res.message || 'โหลดข้อมูลไม่สำเร็จ') + '</div>'; return; }
+      r1Cache[view] = res; renderRound1(res);
+    })
+    .catch(function(err){ r1.innerHTML = '<div class="r1-empty">เกิดข้อผิดพลาด: ' + (err.message || err) + '</div>'; });
+}
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function renderRound1(res){
+  const r1 = document.getElementById('round1-container');
+  const hasGroups = res.groups && res.groups.length > 1;     // GCA มี 10 กลุ่มย่อย → โชว์ dropdown; ผู้นำอื่นไม่โชว์
+  const selId = 'r1-group-' + res.kind;
+  const current = hasGroups ? (r1.getAttribute('data-group-' + res.kind) || '') : '';
+  const items = current ? res.items.filter(function(it){ return (it.group || '') === current || it.rows.some(function(r){ return (r.group||'') === current; }); }) : res.items;
+  const withData = items.filter(function(it){ return it.rows.length; });
+  const noData = items.filter(function(it){ return !it.rows.length; });
+
+  let html = '<div class="r1-toolbar">';
+  html += '<span><b>' + R1_TITLE[res.kind] + '</b> — มีข้อมูล ' + withData.length + ' รายการ' + (noData.length ? ' / ยังไม่ส่ง ' + noData.length : '') + '</span>';
+  if(hasGroups){
+    html += '<select id="' + selId + '"><option value="">ทุกกลุ่มย่อย (' + res.groups.length + ')</option>' +
+      res.groups.map(function(g){ return '<option value="' + esc(g) + '"' + (g === current ? ' selected' : '') + '>' + esc(g) + '</option>'; }).join('') + '</select>';
+  }
+  if(res.updatedAt) html += '<span>อัปเดตล่าสุด ' + esc(res.updatedAt) + '</span>';
+  html += '</div>';
+
+  if(!withData.length && !noData.length){
+    html += '<div class="r1-empty">ยังไม่มีข้อมูลรอบที่ 1 ในเครือข่ายนี้</div>';
+  }
+  withData.forEach(function(it){
+    it.rows.forEach(function(row, i){
+      html += '<div class="r1-card"><span class="index-badge">' + (it.no === '' ? '?' : esc(it.no)) + '</span>' +
+        '<div class="r1-head"><div><div class="r1-name">' + esc(it.name || firstField(row, 'ชื่อ')) + '</div>' +
+        '<div class="r1-church">' + esc(it.church || firstField(row, 'คริสตจักร')) + (it.group ? ' · ' + esc(it.group) : '') + '</div></div>' +
+        '<div class="r1-status">' + esc(row.status || it.status || '') + (it.rows.length > 1 ? ' · รายการที่ ' + (i+1) + '/' + it.rows.length : '') + '</div></div>' +
+        '<div class="r1-fields">' + row.fields.map(function(f){
+          const wide = f.value.length > 60;
+          return '<div class="f' + (wide ? ' wide' : '') + '"><b>' + esc(f.label) + '</b>' + esc(f.value).replace(/\n/g,'<br>') + '</div>';
+        }).join('') + '</div></div>';
+    });
+  });
+  if(noData.length){
+    html += '<div class="r1-sub">ยังไม่ส่งข้อมูลรอบนี้: ' + noData.map(function(it){ return '#' + esc(it.no) + ' ' + esc(it.name || it.church); }).join(' · ') + '</div>';
+  }
+  r1.innerHTML = html;
+  if(hasGroups){
+    document.getElementById(selId).addEventListener('change', function(e){
+      r1.setAttribute('data-group-' + res.kind, e.target.value); renderRound1(res);
+    });
+  }
+}
+function firstField(row, kw){
+  const f = row.fields.find(function(x){ return x.label.indexOf(kw) !== -1; });
+  return f ? f.value : '';
+}
+
+// ล้าง cache มุมมองรอบ 1 เมื่อออกจากระบบ (หาปุ่มออกจากระบบเดิม แล้วเรียก resetRound1() ใน handler)
+function resetRound1(){ r1Cache = { eval: null, report: null }; switchView('roster'); }
 
 // รีเฟรชข้อมูลหลังเพิ่มคริสตจักรสำเร็จ โดยใช้เบอร์เดิมที่ล็อกอินอยู่ (ไม่ต้องขอกรอกใหม่)
 // ใช้ currentLoginPhone (เบอร์ที่พิมพ์ล็อกอินจริง) ไม่ใช่ currentPartner.contact เพราะถ้าล็อกอินด้วยเบอร์ผู้ช่วย
