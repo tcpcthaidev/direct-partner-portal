@@ -27,9 +27,13 @@
   .login-card button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(90deg,#2ec5e0,#2a5be0);color:#fff;font-family:'Prompt',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;}
   .login-card button:disabled{opacity:0.6;cursor:default;}
   .login-error{color:var(--red);font-size:0.88rem;min-height:1.4em;margin-top:8px;}
+  .lang-toggle{position:fixed;top:14px;right:14px;z-index:5;display:flex;border:1.5px solid #1c1c3a;border-radius:999px;overflow:hidden;background:#fff;font-size:0.8rem;font-weight:700;}
+  .lang-toggle button{border:none;background:transparent;padding:7px 12px;font-family:'Prompt',sans-serif;font-weight:700;cursor:pointer;color:#1c1c3a;}
+  .lang-toggle button.on{background:#1c1c3a;color:#fff;}
+  .card .org{font-size:0.82rem;color:var(--blue);font-weight:600;margin:0 0 2px 0;}
 
   #app{display:none;max-width:1100px;margin:0 auto;padding:24px 16px 60px;}
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding-right:110px;}
   .topbar h1{font-size:1.35rem;margin:0;}
   .topbar .meta{font-size:0.82rem;color:var(--text-mute);}
   .btn-outline{border:1.5px solid #1c1c3a;background:#fff;border-radius:999px;padding:9px 18px;font-family:'Prompt',sans-serif;font-weight:600;cursor:pointer;font-size:0.85rem;}
@@ -67,13 +71,15 @@
 </head>
 <body>
 
+<div class="lang-toggle"><button id="lang-th" onclick="setLang('th')">ไทย</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
+
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M12 2 2 7v10l10 5 10-5V7L12 2zm0 2.2 7.5 3.8L12 11.8 4.5 8 12 4.2zM4 9.6l7 3.5v7.2l-7-3.5V9.6zm9 10.7v-7.2l7-3.5v7.2l-7 3.5z"/></svg></div>
-    <h1>ภาพรวมความคืบหน้า รอบที่ 1</h1>
-    <div class="sub">Thailand Church Planting Training Center<br>สำหรับทีมงานกลางและผู้สนับสนุน — กรอกรหัสเข้าดู</div>
-    <input id="code" type="password" placeholder="รหัสเข้าดู" autocomplete="off">
-    <button id="login-btn" onclick="doLogin()">เข้าดูภาพรวม</button>
+    <h1 data-i18n="loginTitle">ภาพรวมความคืบหน้า รอบที่ 1</h1>
+    <div class="sub">Thailand Church Planting Training Center<br><span data-i18n="loginSub">สำหรับทีมงานกลางและผู้สนับสนุน — กรอกรหัสเข้าดู</span></div>
+    <input id="code" type="password" placeholder="รหัสเข้าดู" data-i18n-ph="codePh" autocomplete="off">
+    <button id="login-btn" onclick="doLogin()" data-i18n="loginBtn">เข้าดูภาพรวม</button>
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
@@ -81,42 +87,80 @@
 <div id="app">
   <div class="topbar">
     <div>
-      <h1>ภาพรวมความคืบหน้า รอบที่ 1 — Direct Partner ทั้ง <span id="n-leaders">14</span> องค์กร</h1>
-      <div class="meta">ข้อมูลอัปเดตล่าสุด: <span id="updated">-</span> (ระบบดึงจากฟอร์มทุก 1 ชั่วโมง)</div>
+      <h1><span data-i18n="title1">ภาพรวมความคืบหน้า รอบที่ 1 — Direct Partner ทั้ง</span> <span id="n-leaders">14</span> <span data-i18n="title2">องค์กร</span></h1>
+      <div class="meta"><span data-i18n="updated">ข้อมูลอัปเดตล่าสุด:</span> <span id="updated">-</span> <span data-i18n="updatedNote">(ระบบดึงจากฟอร์มทุก 1 ชั่วโมง)</span></div>
     </div>
     <div style="display:flex;gap:8px;">
-      <button class="btn-outline" onclick="loadData(true)">รีเฟรช</button>
-      <button class="btn-outline" onclick="logout()">ออก</button>
+      <button class="btn-outline" onclick="loadData(true)" data-i18n="refresh">รีเฟรช</button>
+      <button class="btn-outline" onclick="logout()" data-i18n="logout">ออก</button>
     </div>
   </div>
 
   <div class="kpis" id="kpis"></div>
 
   <div class="overall">
-    <div class="row"><span>สัดส่วน Church Planter ที่ส่งรายงานผลรอบ 1 แล้ว (รวมทุกองค์กร)</span><b id="overall-pct">0%</b></div>
+    <div class="row"><span data-i18n="overall">สัดส่วน Church Planter ที่ส่งรายงานผลรอบ 1 แล้ว (รวมทุกองค์กร)</span><b id="overall-pct">0%</b></div>
     <div class="bar"><i id="overall-bar" style="width:0%"></i></div>
   </div>
 
   <div class="legend">
-    <span><b style="background:var(--good)"></b>ส่งแล้ว ≥ 80%</span>
-    <span><b style="background:var(--partial)"></b>ส่งแล้ว 40–79%</span>
-    <span><b style="background:var(--low)"></b>ส่งแล้ว &lt; 40%</span>
-    <span><b style="background:var(--none)"></b>ยังไม่มีข้อมูลเลย</span>
+    <span><b style="background:var(--good)"></b><span data-i18n="lgGood">ส่งแล้ว ≥ 80%</span></span>
+    <span><b style="background:var(--partial)"></b><span data-i18n="lgPartial">ส่งแล้ว 40–79%</span></span>
+    <span><b style="background:var(--low)"></b><span data-i18n="lgLow">ส่งแล้ว &lt; 40%</span></span>
+    <span><b style="background:var(--none)"></b><span data-i18n="lgNone">ยังไม่มีข้อมูลเลย</span></span>
   </div>
   <div class="grid" id="grid"></div>
 
-  <div class="note">
-    <b>วิธีอ่าน:</b> "การ์ด" = จำนวน Church Planter ในรายชื่อหลักขององค์กรนั้น (รวมคนที่เพิ่มเข้ามาจากรายงานรอบ 1) ·
-    "ส่งรายงานแล้ว" = คนที่มีรายงานผลรอบ 1 ในระบบ · "แบบประเมิน" = จำนวนชุดแบบประเมินที่ส่งเข้ามา (จับคู่กับรายชื่อหลักได้ / ทั้งหมด) ·
-    "รอตรวจ" = รายการที่ระบบจับคู่ชื่อได้ไม่แน่นอน ทีม TCPC กำลังตรวจสอบ · หน้านี้แสดงเฉพาะตัวเลขสรุป ไม่แสดงชื่อบุคคลหรือเบอร์โทร
-  </div>
+  <div class="note" id="note"></div>
 </div>
 
-<div id="loading">กำลังโหลดข้อมูล…</div>
+<div id="loading" data-i18n="loading">กำลังโหลดข้อมูล…</div>
 
 <script>
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwm5SgMjCiXAqdr5y3p3L8or7OkzzDSxq9ADvWFKLDk20PnoGs9-hp4UKpTEJBhytUO/exec';
 var currentCode = '';
+
+const I18N = {
+  th: {
+    loginTitle:'ภาพรวมความคืบหน้า รอบที่ 1', loginSub:'สำหรับทีมงานกลางและผู้สนับสนุน — กรอกรหัสเข้าดู', codePh:'รหัสเข้าดู', loginBtn:'เข้าดูภาพรวม',
+    errNoCode:'กรุณากรอกรหัสเข้าดู', errConn:'เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่', errGeneric:'เกิดข้อผิดพลาด',
+    title1:'ภาพรวมความคืบหน้า รอบที่ 1 — Direct Partner ทั้ง', title2:'องค์กร', updated:'ข้อมูลอัปเดตล่าสุด:', updatedNote:'(ระบบดึงจากฟอร์มทุก 1 ชั่วโมง)',
+    refresh:'รีเฟรช', logout:'ออก', loading:'กำลังโหลดข้อมูล…',
+    kStarted:'องค์กรที่เริ่มส่งข้อมูลแล้ว', kCards:'Church Planter ทั้งหมด (การ์ด)', kReported:'ส่งรายงานผลรอบ 1 แล้ว (คน)', kReportRows:'รายงานผลที่ส่งเข้ามา (ชุด)', kEval:'แบบประเมินจับคู่ได้ / ทั้งหมด',
+    overall:'สัดส่วน Church Planter ที่ส่งรายงานผลรอบ 1 แล้ว (รวมทุกองค์กร)',
+    lgGood:'ส่งแล้ว ≥ 80%', lgPartial:'ส่งแล้ว 40–79%', lgLow:'ส่งแล้ว < 40%', lgNone:'ยังไม่มีข้อมูลเลย',
+    cards:'การ์ด', groups:'กลุ่มย่อย', pct:'ส่งรายงานรอบ 1 แล้ว', reported:'ส่งรายงานแล้ว', ppl:'คน', notReported:'ยังไม่ส่ง', reportRows:'รายงานผล', sets:'ชุด', evals:'แบบประเมิน', added:'เพิ่มใหม่จากรายงาน', pending:'รอตรวจ', items:'รายการ',
+    lvGood:'คืบหน้าดี', lvPartial:'ส่งแล้วบางส่วน', lvLow:'ส่งแล้วเล็กน้อย', lvNone:'ยังไม่มีข้อมูล',
+    note:'<b>วิธีอ่าน:</b> "การ์ด" = จำนวน Church Planter ในรายชื่อหลักขององค์กรนั้น (รวมคนที่เพิ่มเข้ามาจากรายงานรอบ 1) · "ส่งรายงานแล้ว" = คนที่มีรายงานผลรอบ 1 ในระบบ · "แบบประเมิน" = จำนวนชุดแบบประเมินที่ส่งเข้ามา (จับคู่กับรายชื่อหลักได้ / ทั้งหมด) · "รอตรวจ" = รายการที่ระบบจับคู่ชื่อได้ไม่แน่นอน ทีม TCPC กำลังตรวจสอบ · หน้านี้แสดงเฉพาะตัวเลขสรุป ไม่แสดงชื่อบุคคลหรือเบอร์โทร'
+  },
+  en: {
+    loginTitle:'Round 1 Progress Overview', loginSub:'For the central team and supporters — enter the access code', codePh:'Access code', loginBtn:'View overview',
+    errNoCode:'Please enter the access code', errConn:'Could not reach the server, please try again', errGeneric:'Something went wrong',
+    title1:'Round 1 Progress Overview — all', title2:'Direct Partner organizations', updated:'Last updated:', updatedNote:'(data is pulled from the forms every hour)',
+    refresh:'Refresh', logout:'Exit', loading:'Loading…',
+    kStarted:'Organizations that have started reporting', kCards:'Church Planters in total (cards)', kReported:'Submitted a Round 1 report (people)', kReportRows:'Round 1 reports received (sets)', kEval:'Evaluations matched / received',
+    overall:'Share of Church Planters who have submitted a Round 1 report (all organizations)',
+    lgGood:'≥ 80% reported', lgPartial:'40–79% reported', lgLow:'< 40% reported', lgNone:'No data yet',
+    cards:'cards', groups:'sub-groups', pct:'Round 1 reports submitted', reported:'Reported', ppl:'people', notReported:'Not yet', reportRows:'Reports', sets:'sets', evals:'Evaluations', added:'New from reports', pending:'Pending review', items:'items',
+    lvGood:'On track', lvPartial:'Partially reported', lvLow:'Just started', lvNone:'No data yet',
+    note:'<b>How to read:</b> "cards" = number of Church Planters on that organization\'s master list (including people added from Round 1 reports) · "Reported" = people with a Round 1 report in the system · "Evaluations" = evaluation forms received (matched to the master list / total) · "Pending review" = entries the system could not match with certainty; the TCPC team is checking them · This page shows summary numbers only — no personal names or phone numbers. Leader and organization names are shown as recorded in Thai.'
+  }
+};
+var lang = 'th';
+try { lang = localStorage.getItem('ov_lang') || ((navigator.language || '').toLowerCase().indexOf('th') === 0 ? 'th' : 'th'); } catch(e){}
+function T(k){ return (I18N[lang] && I18N[lang][k]) || I18N.th[k] || k; }
+var lastRes = null;
+function setLang(l){
+  lang = l; try { localStorage.setItem('ov_lang', l); } catch(e){}
+  document.documentElement.lang = l;
+  document.getElementById('lang-th').className = l === 'th' ? 'on' : '';
+  document.getElementById('lang-en').className = l === 'en' ? 'on' : '';
+  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = T(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder = T(el.getAttribute('data-i18n-ph')); });
+  document.getElementById('note').innerHTML = T('note');
+  document.title = T('loginTitle') + ' — TCPC Direct Partner';
+  if(lastRes) render(lastRes);
+}
 
 function callApi(action, payload){
   return fetch(WEBAPP_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(Object.assign({ action: action }, payload)) })
@@ -132,7 +176,7 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&
 function doLogin(){
   var code = document.getElementById('code').value.trim();
   var err = document.getElementById('login-error');
-  if(!code){ err.textContent = 'กรุณากรอกรหัสเข้าดู'; return; }
+  if(!code){ err.textContent = T('errNoCode'); return; }
   currentCode = code; err.textContent = '';
   loadData(false);
 }
@@ -146,7 +190,7 @@ function loadData(isRefresh){
         currentCode = '';
         document.getElementById('app').style.display = 'none';
         document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('login-error').textContent = res.message || 'เกิดข้อผิดพลาด';
+        document.getElementById('login-error').textContent = res.message || T('errGeneric');
         return;
       }
       try { sessionStorage.setItem('ov_code', currentCode); } catch(e){}
@@ -154,22 +198,23 @@ function loadData(isRefresh){
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
     })
-    .catch(function(){ document.getElementById('login-error').textContent = 'เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่'; })
+    .catch(function(){ document.getElementById('login-error').textContent = T('errConn'); })
     .then(function(){ btn.disabled = false; showLoading(false); });
 }
 
-function levelText(l){ return { good:'คืบหน้าดี', partial:'ส่งแล้วบางส่วน', low:'ส่งแล้วเล็กน้อย', none:'ยังไม่มีข้อมูล' }[l] || ''; }
+function levelText(l){ return T({ good:'lvGood', partial:'lvPartial', low:'lvLow', none:'lvNone' }[l] || ''); }
 
 function render(res){
+  lastRes = res;
   var t = res.total, L = res.leaders.slice();
   document.getElementById('updated').textContent = res.updatedAt || '-';
   document.getElementById('n-leaders').textContent = t.leaders;
   document.getElementById('kpis').innerHTML = [
-    ['<span>' + t.started + '</span><small style="font-size:1rem;color:#6b7280;">/' + t.leaders + '</small>', 'องค์กรที่เริ่มส่งข้อมูลแล้ว'],
-    [t.cards, 'Church Planter ทั้งหมด (การ์ด)'],
-    [t.reported, 'ส่งรายงานผลรอบ 1 แล้ว (คน)'],
-    [t.reportRows, 'รายงานผลที่ส่งเข้ามา (ชุด)'],
-    [t.evalMatched + '<small style="font-size:1rem;color:#6b7280;">/' + t.evalRows + '</small>', 'แบบประเมินจับคู่ได้ / ทั้งหมด']
+    ['<span>' + t.started + '</span><small style="font-size:1rem;color:#6b7280;">/' + t.leaders + '</small>', T('kStarted')],
+    [t.cards, T('kCards')],
+    [t.reported, T('kReported')],
+    [t.reportRows, T('kReportRows')],
+    [t.evalMatched + '<small style="font-size:1rem;color:#6b7280;">/' + t.evalRows + '</small>', T('kEval')]
   ].map(function(k){ return '<div class="kpi"><div class="v">' + k[0] + '</div><div class="l">' + k[1] + '</div></div>'; }).join('');
   document.getElementById('overall-pct').textContent = t.pctReported + '%';
   document.getElementById('overall-bar').style.width = t.pctReported + '%';
@@ -179,17 +224,18 @@ function render(res){
   document.getElementById('grid').innerHTML = L.map(function(s){
     var pending = s.flagged;
     return '<div class="card ' + s.level + '">' +
+      (s.org ? '<div class="org">' + esc(s.org) + '</div>' : '') +
       '<h3>' + esc(s.leader) + '</h3>' +
-      '<div class="sub">' + s.cards + ' การ์ด' + (s.groupCount > 1 ? ' · ' + s.groupCount + ' กลุ่มย่อย' : '') + '</div>' +
-      '<div class="pct"><span>ส่งรายงานรอบ 1 แล้ว</span><b>' + s.pctReported + '%</b></div>' +
+      '<div class="sub">' + s.cards + ' ' + T('cards') + (s.groupCount > 1 ? ' · ' + s.groupCount + ' ' + T('groups') : '') + '</div>' +
+      '<div class="pct"><span>' + T('pct') + '</span><b>' + s.pctReported + '%</b></div>' +
       '<div class="bar"><i style="width:' + s.pctReported + '%"></i></div>' +
       '<div class="stats">' +
-        '<span>ส่งรายงานแล้ว <b>' + s.reported + '</b> / ' + s.cards + ' คน</span>' +
-        '<span>ยังไม่ส่ง <b>' + s.notReported + '</b> คน</span>' +
-        '<span>รายงานผล <b>' + s.reportRows + '</b> ชุด</span>' +
-        '<span>แบบประเมิน <b>' + s.evalMatched + '</b> / ' + s.evalRows + ' ชุด</span>' +
-        '<span>เพิ่มใหม่จากรายงาน <b>' + s.added + '</b> คน</span>' +
-        '<span>รอตรวจ <b>' + pending + '</b> รายการ</span>' +
+        '<span>' + T('reported') + ' <b>' + s.reported + '</b> / ' + s.cards + ' ' + T('ppl') + '</span>' +
+        '<span>' + T('notReported') + ' <b>' + s.notReported + '</b> ' + T('ppl') + '</span>' +
+        '<span>' + T('reportRows') + ' <b>' + s.reportRows + '</b> ' + T('sets') + '</span>' +
+        '<span>' + T('evals') + ' <b>' + s.evalMatched + '</b> / ' + s.evalRows + ' ' + T('sets') + '</span>' +
+        '<span>' + T('added') + ' <b>' + s.added + '</b> ' + T('ppl') + '</span>' +
+        '<span>' + T('pending') + ' <b>' + pending + '</b> ' + T('items') + '</span>' +
       '</div>' +
       '<span class="tag ' + s.level + '">' + levelText(s.level) + '</span>' +
     '</div>';
@@ -204,6 +250,7 @@ function logout(){
   document.getElementById('code').value = '';
 }
 
+setLang(lang);
 // เปิดค้างไว้ในแท็บเดิม ไม่ต้องกรอกรหัสซ้ำ
 try { var saved = sessionStorage.getItem('ov_code'); if(saved){ currentCode = saved; loadData(false); } } catch(e){}
 </script>
