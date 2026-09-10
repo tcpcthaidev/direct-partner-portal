@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ภาพรวมความคืบหน้ารอบ 1 — TCPC Direct Partner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0b0b2e; --blue:#2a2ae0; --orange:#ff7a3d; --red:#ff4d4d;
+    --bg-grad: linear-gradient(160deg,#eaf3ff 0%, #ffffff 45%, #cfe4fb 100%);
+    --card-border:#dfe6f0; --text-dark:#14142b; --text-mute:#6b7280;
+    --good:#16a34a; --partial:#f59e0b; --low:#f97316; --none:#dc2626;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Prompt',sans-serif;background:var(--bg-grad);color:var(--text-dark);min-height:100vh;}
+
+  #login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+  .login-card{background:#fff;border:1.5px solid var(--card-border);border-radius:24px;padding:44px 40px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(20,20,60,0.08);}
+  .login-logo{width:64px;height:64px;border-radius:50%;background:var(--navy);margin:0 auto 20px auto;display:flex;align-items:center;justify-content:center;}
+  .login-logo svg{width:30px;height:30px;fill:#fff;}
+  .login-card h1{font-size:1.25rem;margin:0 0 6px 0;}
+  .login-card .sub{font-size:0.9rem;color:var(--text-mute);margin-bottom:28px;}
+  .login-card input{width:100%;padding:16px 18px;border-radius:14px;border:1.5px solid var(--card-border);font-family:'Prompt',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:2px;margin-bottom:14px;}
+  .login-card input:focus{outline:none;border-color:var(--blue);}
+  .login-card button{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(90deg,#2ec5e0,#2a5be0);color:#fff;font-family:'Prompt',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;}
+  .login-card button:disabled{opacity:0.6;cursor:default;}
+  .login-error{color:var(--red);font-size:0.88rem;min-height:1.4em;margin-top:8px;}
+
+  #app{display:none;max-width:1100px;margin:0 auto;padding:24px 16px 60px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .topbar h1{font-size:1.35rem;margin:0;}
+  .topbar .meta{font-size:0.82rem;color:var(--text-mute);}
+  .btn-outline{border:1.5px solid #1c1c3a;background:#fff;border-radius:999px;padding:9px 18px;font-family:'Prompt',sans-serif;font-weight:600;cursor:pointer;font-size:0.85rem;}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+  .kpi{background:#fff;border:1.5px solid var(--card-border);border-radius:18px;padding:16px 18px;}
+  .kpi .v{font-size:1.7rem;font-weight:800;line-height:1.1;}
+  .kpi .l{font-size:0.8rem;color:var(--text-mute);margin-top:4px;}
+
+  .overall{background:#fff;border:1.5px solid var(--card-border);border-radius:18px;padding:16px 18px;margin-bottom:22px;}
+  .overall .row{display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:8px;}
+  .bar{height:14px;background:#eef1f6;border-radius:999px;overflow:hidden;}
+  .bar > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2ec5e0,#2a5be0);transition:width .4s;}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:0.8rem;color:var(--text-mute);margin-bottom:12px;}
+  .legend b{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  .card{background:#fff;border:1.5px solid var(--card-border);border-radius:18px;padding:16px 18px;border-left:6px solid var(--card-border);}
+  .card.good{border-left-color:var(--good);} .card.partial{border-left-color:var(--partial);} .card.low{border-left-color:var(--low);} .card.none{border-left-color:var(--none);}
+  .card h3{margin:0 0 2px 0;font-size:1rem;}
+  .card .sub{font-size:0.78rem;color:var(--text-mute);margin-bottom:10px;}
+  .card .pct{display:flex;justify-content:space-between;align-items:baseline;font-size:0.82rem;margin-bottom:4px;}
+  .card .pct b{font-size:1.1rem;}
+  .card .bar{height:10px;margin-bottom:10px;}
+  .card.good .bar>i{background:var(--good);} .card.partial .bar>i{background:var(--partial);} .card.low .bar>i{background:var(--low);} .card.none .bar>i{background:var(--none);}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:0.8rem;color:#374151;}
+  .stats span b{color:var(--text-dark);}
+  .tag{display:inline-block;font-size:0.72rem;font-weight:600;padding:3px 10px;border-radius:999px;color:#fff;margin-top:10px;}
+  .tag.good{background:var(--good);} .tag.partial{background:var(--partial);} .tag.low{background:var(--low);} .tag.none{background:var(--none);}
+
+  .note{font-size:0.78rem;color:var(--text-mute);margin-top:22px;line-height:1.6;}
+  #loading{position:fixed;inset:0;background:rgba(255,255,255,0.7);display:none;align-items:center;justify-content:center;font-weight:600;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M12 2 2 7v10l10 5 10-5V7L12 2zm0 2.2 7.5 3.8L12 11.8 4.5 8 12 4.2zM4 9.6l7 3.5v7.2l-7-3.5V9.6zm9 10.7v-7.2l7-3.5v7.2l-7 3.5z"/></svg></div>
+    <h1>ภาพรวมความคืบหน้า รอบที่ 1</h1>
+    <div class="sub">Thailand Church Planting Training Center<br>สำหรับทีมงานกลางและผู้สนับสนุน — กรอกรหัสเข้าดู</div>
+    <input id="code" type="password" placeholder="รหัสเข้าดู" autocomplete="off">
+    <button id="login-btn" onclick="doLogin()">เข้าดูภาพรวม</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>ภาพรวมความคืบหน้า รอบที่ 1 — Direct Partner ทั้ง <span id="n-leaders">14</span> องค์กร</h1>
+      <div class="meta">ข้อมูลอัปเดตล่าสุด: <span id="updated">-</span> (ระบบดึงจากฟอร์มทุก 1 ชั่วโมง)</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-outline" onclick="loadData(true)">รีเฟรช</button>
+      <button class="btn-outline" onclick="logout()">ออก</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="overall">
+    <div class="row"><span>สัดส่วน Church Planter ที่ส่งรายงานผลรอบ 1 แล้ว (รวมทุกองค์กร)</span><b id="overall-pct">0%</b></div>
+    <div class="bar"><i id="overall-bar" style="width:0%"></i></div>
+  </div>
+
+  <div class="legend">
+    <span><b style="background:var(--good)"></b>ส่งแล้ว ≥ 80%</span>
+    <span><b style="background:var(--partial)"></b>ส่งแล้ว 40–79%</span>
+    <span><b style="background:var(--low)"></b>ส่งแล้ว &lt; 40%</span>
+    <span><b style="background:var(--none)"></b>ยังไม่มีข้อมูลเลย</span>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="note">
+    <b>วิธีอ่าน:</b> "การ์ด" = จำนวน Church Planter ในรายชื่อหลักขององค์กรนั้น (รวมคนที่เพิ่มเข้ามาจากรายงานรอบ 1) ·
+    "ส่งรายงานแล้ว" = คนที่มีรายงานผลรอบ 1 ในระบบ · "แบบประเมิน" = จำนวนชุดแบบประเมินที่ส่งเข้ามา (จับคู่กับรายชื่อหลักได้ / ทั้งหมด) ·
+    "รอตรวจ" = รายการที่ระบบจับคู่ชื่อได้ไม่แน่นอน ทีม TCPC กำลังตรวจสอบ · หน้านี้แสดงเฉพาะตัวเลขสรุป ไม่แสดงชื่อบุคคลหรือเบอร์โทร
+  </div>
+</div>
+
+<div id="loading">กำลังโหลดข้อมูล…</div>
+
+<script>
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwm5SgMjCiXAqdr5y3p3L8or7OkzzDSxq9ADvWFKLDk20PnoGs9-hp4UKpTEJBhytUO/exec';
+var currentCode = '';
+
+function callApi(action, payload){
+  return fetch(WEBAPP_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(Object.assign({ action: action }, payload)) })
+    .then(function(r){ return r.json(); });
+}
+function getClientId(){
+  try { var id = localStorage.getItem('dpp_client_id'); if(!id){ id = 'c_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2); localStorage.setItem('dpp_client_id', id); } return id; }
+  catch(e){ return 'c_' + Math.random().toString(36).slice(2); }
+}
+function showLoading(v){ document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function doLogin(){
+  var code = document.getElementById('code').value.trim();
+  var err = document.getElementById('login-error');
+  if(!code){ err.textContent = 'กรุณากรอกรหัสเข้าดู'; return; }
+  currentCode = code; err.textContent = '';
+  loadData(false);
+}
+document.getElementById('code').addEventListener('keydown', function(e){ if(e.key === 'Enter') doLogin(); });
+
+function loadData(isRefresh){
+  var btn = document.getElementById('login-btn'); btn.disabled = true; showLoading(true);
+  callApi('getOverview', { code: currentCode, clientId: getClientId() })
+    .then(function(res){
+      if(!res.success){
+        currentCode = '';
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('login-error').textContent = res.message || 'เกิดข้อผิดพลาด';
+        return;
+      }
+      try { sessionStorage.setItem('ov_code', currentCode); } catch(e){}
+      render(res);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    })
+    .catch(function(){ document.getElementById('login-error').textContent = 'เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่'; })
+    .then(function(){ btn.disabled = false; showLoading(false); });
+}
+
+function levelText(l){ return { good:'คืบหน้าดี', partial:'ส่งแล้วบางส่วน', low:'ส่งแล้วเล็กน้อย', none:'ยังไม่มีข้อมูล' }[l] || ''; }
+
+function render(res){
+  var t = res.total, L = res.leaders.slice();
+  document.getElementById('updated').textContent = res.updatedAt || '-';
+  document.getElementById('n-leaders').textContent = t.leaders;
+  document.getElementById('kpis').innerHTML = [
+    ['<span>' + t.started + '</span><small style="font-size:1rem;color:#6b7280;">/' + t.leaders + '</small>', 'องค์กรที่เริ่มส่งข้อมูลแล้ว'],
+    [t.cards, 'Church Planter ทั้งหมด (การ์ด)'],
+    [t.reported, 'ส่งรายงานผลรอบ 1 แล้ว (คน)'],
+    [t.reportRows, 'รายงานผลที่ส่งเข้ามา (ชุด)'],
+    [t.evalMatched + '<small style="font-size:1rem;color:#6b7280;">/' + t.evalRows + '</small>', 'แบบประเมินจับคู่ได้ / ทั้งหมด']
+  ].map(function(k){ return '<div class="kpi"><div class="v">' + k[0] + '</div><div class="l">' + k[1] + '</div></div>'; }).join('');
+  document.getElementById('overall-pct').textContent = t.pctReported + '%';
+  document.getElementById('overall-bar').style.width = t.pctReported + '%';
+
+  var rank = { good:0, partial:1, low:2, none:3 };
+  L.sort(function(a,b){ return (rank[a.level]-rank[b.level]) || (b.pctReported - a.pctReported) || (b.cards - a.cards); });
+  document.getElementById('grid').innerHTML = L.map(function(s){
+    var pending = s.flagged;
+    return '<div class="card ' + s.level + '">' +
+      '<h3>' + esc(s.leader) + '</h3>' +
+      '<div class="sub">' + s.cards + ' การ์ด' + (s.groupCount > 1 ? ' · ' + s.groupCount + ' กลุ่มย่อย' : '') + '</div>' +
+      '<div class="pct"><span>ส่งรายงานรอบ 1 แล้ว</span><b>' + s.pctReported + '%</b></div>' +
+      '<div class="bar"><i style="width:' + s.pctReported + '%"></i></div>' +
+      '<div class="stats">' +
+        '<span>ส่งรายงานแล้ว <b>' + s.reported + '</b> / ' + s.cards + ' คน</span>' +
+        '<span>ยังไม่ส่ง <b>' + s.notReported + '</b> คน</span>' +
+        '<span>รายงานผล <b>' + s.reportRows + '</b> ชุด</span>' +
+        '<span>แบบประเมิน <b>' + s.evalMatched + '</b> / ' + s.evalRows + ' ชุด</span>' +
+        '<span>เพิ่มใหม่จากรายงาน <b>' + s.added + '</b> คน</span>' +
+        '<span>รอตรวจ <b>' + pending + '</b> รายการ</span>' +
+      '</div>' +
+      '<span class="tag ' + s.level + '">' + levelText(s.level) + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function logout(){
+  currentCode = '';
+  try { sessionStorage.removeItem('ov_code'); } catch(e){}
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('code').value = '';
+}
+
+// เปิดค้างไว้ในแท็บเดิม ไม่ต้องกรอกรหัสซ้ำ
+try { var saved = sessionStorage.getItem('ov_code'); if(saved){ currentCode = saved; loadData(false); } } catch(e){}
+</script>
+</body>
+</html>
