@@ -66,6 +66,23 @@
   .tag.good{background:var(--good);} .tag.partial{background:var(--partial);} .tag.low{background:var(--low);} .tag.none{background:var(--none);}
 
   .note{font-size:0.78rem;color:var(--text-mute);margin-top:22px;line-height:1.6;}
+  .card.clickable{cursor:pointer;transition:transform .12s,box-shadow .12s;} .card.clickable:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(20,20,60,0.10);}
+  .card .hint{font-size:0.72rem;color:var(--blue);margin-top:8px;display:none;} .card.clickable .hint{display:block;}
+  #modal{position:fixed;inset:0;background:rgba(10,10,40,0.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto;z-index:20;}
+  #modal.open{display:flex;}
+  .modal-box{background:#fff;border-radius:20px;max-width:960px;width:100%;padding:20px 22px 26px;box-shadow:0 30px 80px rgba(0,0,0,0.25);}
+  .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;}
+  .modal-head h2{margin:0;font-size:1.15rem;} .modal-head .org{color:var(--blue);font-size:0.85rem;font-weight:600;}
+  .modal-close{border:1.5px solid #1c1c3a;background:#fff;border-radius:999px;width:36px;height:36px;font-size:1.1rem;cursor:pointer;font-family:'Prompt',sans-serif;flex:none;}
+  .modal-sum{display:flex;gap:14px;flex-wrap:wrap;font-size:0.82rem;color:#374151;margin-bottom:12px;}
+  .modal-sum b{color:var(--text-dark);}
+  .ptable{width:100%;border-collapse:collapse;font-size:0.82rem;}
+  .ptable th{text-align:left;font-weight:600;color:var(--text-mute);padding:6px 8px;border-bottom:1.5px solid var(--card-border);white-space:nowrap;}
+  .ptable td{padding:6px 8px;border-bottom:1px solid #eef1f6;vertical-align:top;}
+  .ptable tr.grp td{background:#f4f7fb;font-weight:700;color:var(--navy);padding:8px;}
+  .ptable td.c{text-align:center;white-space:nowrap;}
+  .ok{color:var(--good);font-weight:700;} .no{color:#c4c9d4;} .st-warn{color:var(--partial);font-size:0.72rem;} .st-new{color:var(--blue);font-size:0.72rem;}
+  .ptable-wrap{overflow-x:auto;}
   #loading{position:fixed;inset:0;background:rgba(255,255,255,0.7);display:none;align-items:center;justify-content:center;font-weight:600;}
 </style>
 </head>
@@ -114,6 +131,14 @@
   <div class="note" id="note"></div>
 </div>
 
+<div id="modal" onclick="if(event.target===this) closeDetail()">
+  <div class="modal-box">
+    <div class="modal-head"><div><div class="org" id="m-org"></div><h2 id="m-leader"></h2></div><button class="modal-close" onclick="closeDetail()" aria-label="close">✕</button></div>
+    <div class="modal-sum" id="m-sum"></div>
+    <div class="ptable-wrap" id="m-table"></div>
+  </div>
+</div>
+
 <div id="loading" data-i18n="loading">กำลังโหลดข้อมูล…</div>
 
 <script>
@@ -131,6 +156,7 @@ const I18N = {
     lgGood:'ส่งแล้ว ≥ 80%', lgPartial:'ส่งแล้ว 40–79%', lgLow:'ส่งแล้ว < 40%', lgNone:'ยังไม่มีข้อมูลเลย',
     cards:'การ์ด', groups:'กลุ่มย่อย', pct:'ส่งรายงานรอบ 1 แล้ว', reported:'ส่งรายงานแล้ว', ppl:'คน', notReported:'ยังไม่ส่ง', reportRows:'รายงานผล', sets:'ชุด', evals:'แบบประเมิน', added:'เพิ่มใหม่จากรายงาน', pending:'รอตรวจ', items:'รายการ',
     lvGood:'คืบหน้าดี', lvPartial:'ส่งแล้วบางส่วน', lvLow:'ส่งแล้วเล็กน้อย', lvNone:'ยังไม่มีข้อมูล',
+    hint:'คลิกดูรายชื่อว่าใครส่งแล้ว ›', dNo:'#', dName:'ชื่อ Church Planter', dChurch:'คริสตจักร / กลุ่ม', dArea:'พื้นที่', dReport:'รายงานผล', dEval:'แบบประเมิน', dStWarn:'รอตรวจ', dStNew:'เพิ่มจากรายงาน', dPeople:'ทั้งหมด', dSent:'ส่งรายงานแล้ว', dEvalDone:'มีแบบประเมิน', dEvalUn:'แบบประเมินที่จับคู่ชื่อไม่ได้', dLoading:'กำลังโหลดรายชื่อ…', dNoGroup:'(ไม่ระบุกลุ่มย่อย)',
     note:'<b>วิธีอ่าน:</b> "การ์ด" = จำนวน Church Planter ในรายชื่อหลักขององค์กรนั้น (รวมคนที่เพิ่มเข้ามาจากรายงานรอบ 1) · "ส่งรายงานแล้ว" = คนที่มีรายงานผลรอบ 1 ในระบบ · "แบบประเมิน" = จำนวนชุดแบบประเมินที่ส่งเข้ามา (จับคู่กับรายชื่อหลักได้ / ทั้งหมด) · "รอตรวจ" = รายการที่ระบบจับคู่ชื่อได้ไม่แน่นอน ทีม TCPC กำลังตรวจสอบ · หน้านี้แสดงเฉพาะตัวเลขสรุป ไม่แสดงชื่อบุคคลหรือเบอร์โทร'
   },
   en: {
@@ -143,6 +169,7 @@ const I18N = {
     lgGood:'≥ 80% reported', lgPartial:'40–79% reported', lgLow:'< 40% reported', lgNone:'No data yet',
     cards:'cards', groups:'sub-groups', pct:'Round 1 reports submitted', reported:'Reported', ppl:'people', notReported:'Not yet', reportRows:'Reports', sets:'sets', evals:'Evaluations', added:'New from reports', pending:'Pending review', items:'items',
     lvGood:'On track', lvPartial:'Partially reported', lvLow:'Just started', lvNone:'No data yet',
+    hint:'Click to see who has reported ›', dNo:'#', dName:'Church Planter', dChurch:'Church / group', dArea:'Area', dReport:'Report', dEval:'Evaluation', dStWarn:'pending review', dStNew:'added from report', dPeople:'Total', dSent:'Reported', dEvalDone:'Evaluated', dEvalUn:'Evaluations not matched to a name', dLoading:'Loading list…', dNoGroup:'(no sub-group)',
     note:'<b>How to read:</b> "cards" = number of Church Planters on that organization\'s master list (including people added from Round 1 reports) · "Reported" = people with a Round 1 report in the system · "Evaluations" = evaluation forms received (matched to the master list / total) · "Pending review" = entries the system could not match with certainty; the TCPC team is checking them · This page shows summary numbers only — no personal names or phone numbers. Leader and organization names are transliterated from Thai.'
   }
 };
@@ -187,6 +214,8 @@ var lang = 'th';
 try { lang = localStorage.getItem('ov_lang') || ((navigator.language || '').toLowerCase().indexOf('th') === 0 ? 'th' : 'th'); } catch(e){}
 function T(k){ return (I18N[lang] && I18N[lang][k]) || I18N.th[k] || k; }
 var lastRes = null;
+var level = 'view';
+var detailCache = {};
 function setLang(l){
   lang = l; try { localStorage.setItem('ov_lang', l); } catch(e){}
   document.documentElement.lang = l;
@@ -197,6 +226,7 @@ function setLang(l){
   document.getElementById('note').innerHTML = T('note');
   document.title = T('loginTitle') + ' — TCPC Direct Partner';
   if(lastRes) render(lastRes);
+  if(currentDetail){ document.getElementById('m-leader').textContent = leaderName(currentDetail.leader); var ld = (lastRes && lastRes.leaders || []).filter(function(x){ return x.leader === currentDetail.leader; })[0]; if(ld) document.getElementById('m-org').textContent = orgName(ld.org || ''); renderDetail(currentDetail); }
 }
 
 function callApi(action, payload){
@@ -231,6 +261,7 @@ function loadData(isRefresh){
         return;
       }
       try { sessionStorage.setItem('ov_code', currentCode); } catch(e){}
+      level = res.level || 'view'; detailCache = {};
       render(res);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
@@ -260,7 +291,7 @@ function render(res){
   L.sort(function(a,b){ return (rank[a.level]-rank[b.level]) || (b.pctReported - a.pctReported) || (b.cards - a.cards); });
   document.getElementById('grid').innerHTML = L.map(function(s){
     var pending = s.flagged;
-    return '<div class="card ' + s.level + '">' +
+    return '<div class="card ' + s.level + (level === 'admin' ? ' clickable' : '') + '" data-leader="' + esc(s.leader) + '" onclick="openDetail(this.getAttribute(\'data-leader\'))">' +
       (s.org ? '<div class="org">' + esc(orgName(s.org)) + '</div>' : '') +
       '<h3>' + esc(leaderName(s.leader)) + '</h3>' +
       '<div class="sub">' + s.cards + ' ' + T('cards') + (s.groupCount > 1 ? ' · ' + s.groupCount + ' ' + T('groups') : '') + '</div>' +
@@ -275,11 +306,63 @@ function render(res){
         '<span>' + T('pending') + ' <b>' + pending + '</b> ' + T('items') + '</span>' +
       '</div>' +
       '<span class="tag ' + s.level + '">' + levelText(s.level) + '</span>' +
+      '<div class="hint">' + T('hint') + '</div>' +
     '</div>';
   }).join('');
 }
 
+// ───── รายละเอียดรายคน (เฉพาะรหัสทีมกลาง) ─────
+var currentDetail = null;
+function openDetail(leader){
+  if(level !== 'admin') return;
+  var lead = (lastRes.leaders || []).filter(function(x){ return x.leader === leader; })[0] || {};
+  document.getElementById('m-org').textContent = orgName(lead.org || '');
+  document.getElementById('m-leader').textContent = leaderName(leader);
+  document.getElementById('m-sum').innerHTML = '';
+  document.getElementById('m-table').innerHTML = '<div style="padding:18px;color:#6b7280;">' + T('dLoading') + '</div>';
+  document.getElementById('modal').classList.add('open');
+  if(detailCache[leader]){ renderDetail(detailCache[leader]); return; }
+  callApi('getOverviewDetail', { code: currentCode, clientId: getClientId(), leader: leader })
+    .then(function(res){
+      if(!res.success){ document.getElementById('m-table').innerHTML = '<div style="padding:18px;color:#ff4d4d;">' + esc(res.message || T('errGeneric')) + '</div>'; return; }
+      detailCache[leader] = res; currentDetail = res; renderDetail(res);
+    })
+    .catch(function(){ document.getElementById('m-table').innerHTML = '<div style="padding:18px;color:#ff4d4d;">' + T('errConn') + '</div>'; });
+}
+function closeDetail(){ document.getElementById('modal').classList.remove('open'); currentDetail = null; }
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDetail(); });
+function renderDetail(res){
+  currentDetail = res;
+  var P = res.people || [];
+  var sent = P.filter(function(p){ return p.report > 0; }).length, ev = P.filter(function(p){ return p.eval > 0; }).length;
+  document.getElementById('m-sum').innerHTML =
+    '<span>' + T('dPeople') + ' <b>' + P.length + '</b></span>' +
+    '<span>' + T('dSent') + ' <b>' + sent + '</b></span>' +
+    '<span>' + T('dEvalDone') + ' <b>' + ev + '</b></span>' +
+    (res.evalUnmatched ? '<span>' + T('dEvalUn') + ' <b>' + res.evalUnmatched + '</b></span>' : '');
+  var groups = {}; var order = [];
+  P.forEach(function(p){ var g = p.group || ''; if(!groups[g]){ groups[g] = []; order.push(g); } groups[g].push(p); });
+  var multi = order.length > 1 || (order.length === 1 && order[0] !== '');
+  var html = '<table class="ptable"><thead><tr><th>' + T('dNo') + '</th><th>' + T('dName') + '</th><th>' + T('dChurch') + '</th><th>' + T('dArea') + '</th><th style="text-align:center">' + T('dReport') + '</th><th style="text-align:center">' + T('dEval') + '</th></tr></thead><tbody>';
+  order.forEach(function(g){
+    var rows = groups[g];
+    if(multi){
+      var gs = rows.filter(function(p){ return p.report > 0; }).length, ge = rows.filter(function(p){ return p.eval > 0; }).length;
+      html += '<tr class="grp"><td colspan="4">' + esc(g || T('dNoGroup')) + ' <span style="font-weight:400;color:#6b7280;">(' + rows.length + ')</span></td><td class="c">' + gs + '/' + rows.length + '</td><td class="c">' + ge + '/' + rows.length + '</td></tr>';
+    }
+    rows.forEach(function(p){
+      var st = p.status === 'warn' ? ' <span class="st-warn">⚠ ' + T('dStWarn') + '</span>' : (p.status === 'new' ? ' <span class="st-new">🆕 ' + T('dStNew') + '</span>' : '');
+      html += '<tr><td>' + esc(p.no) + '</td><td>' + esc(p.name) + st + '</td><td>' + esc(p.church) + '</td><td>' + esc(p.area) + '</td>' +
+        '<td class="c">' + (p.report > 0 ? '<span class="ok">✓' + (p.report > 1 ? ' ×' + p.report : '') + '</span>' : '<span class="no">–</span>') + '</td>' +
+        '<td class="c">' + (p.eval > 0 ? '<span class="ok">✓' + (p.eval > 1 ? ' ×' + p.eval : '') + '</span>' : '<span class="no">–</span>') + '</td></tr>';
+    });
+  });
+  html += '</tbody></table>';
+  document.getElementById('m-table').innerHTML = html;
+}
+
 function logout(){
+  closeDetail(); level = 'view'; detailCache = {};
   currentCode = '';
   try { sessionStorage.removeItem('ov_code'); } catch(e){}
   document.getElementById('app').style.display = 'none';
