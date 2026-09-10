@@ -143,9 +143,46 @@ const I18N = {
     lgGood:'≥ 80% reported', lgPartial:'40–79% reported', lgLow:'< 40% reported', lgNone:'No data yet',
     cards:'cards', groups:'sub-groups', pct:'Round 1 reports submitted', reported:'Reported', ppl:'people', notReported:'Not yet', reportRows:'Reports', sets:'sets', evals:'Evaluations', added:'New from reports', pending:'Pending review', items:'items',
     lvGood:'On track', lvPartial:'Partially reported', lvLow:'Just started', lvNone:'No data yet',
-    note:'<b>How to read:</b> "cards" = number of Church Planters on that organization\'s master list (including people added from Round 1 reports) · "Reported" = people with a Round 1 report in the system · "Evaluations" = evaluation forms received (matched to the master list / total) · "Pending review" = entries the system could not match with certainty; the TCPC team is checking them · This page shows summary numbers only — no personal names or phone numbers. Leader and organization names are shown as recorded in Thai.'
+    note:'<b>How to read:</b> "cards" = number of Church Planters on that organization\'s master list (including people added from Round 1 reports) · "Reported" = people with a Round 1 report in the system · "Evaluations" = evaluation forms received (matched to the master list / total) · "Pending review" = entries the system could not match with certainty; the TCPC team is checking them · This page shows summary numbers only — no personal names or phone numbers. Leader and organization names are transliterated from Thai.'
   }
 };
+
+// ชื่อภาษาอังกฤษของผู้นำ/องค์กร (คีย์ = ชื่อไทยตัดช่องว่าง) — แก้สะกดได้ที่นี่
+const NAME_EN = {
+  'อ.ณรงค์กิจทวีสิน': 'Ajarn Narong Kittaweesin',
+  'ศจ.สิทธิชัยว่องวีระยุทธ์': 'Rev. Sittichai Wongweerayut',
+  'อ.จักรพันธ์แกล้วกล้า': 'Ajarn Jakkaphan Klaewkla',
+  'ศจ.ดร.เจริญศิรตาจิตศักดานนท์': 'Rev. Dr. Charoensirata Jitsakdanon',
+  'ศจ.ดร.วีระเดชจิตศักดานนท์': 'Rev. Dr. Weeradech Jitsakdanon',
+  'ศจ.คำสิงห์รวมวงค์': 'Rev. Khamsing Ruamwong',
+  'อ.อรรถสิทธิ์ชำนาญเอื้อ': 'Ajarn Attasit Chamnan-uea',
+  'ศจ.คัมภีร์รองหานาม': 'Rev. Khamphee Ronghanam',
+  'ศจ.อภิชาติกาลวันตวานิช': 'Rev. Apichat Kalawantawanich',
+  'อ.วันชัยวงศ์เลวี': 'Ajarn Wanchai Wonglevi',
+  'ศจ.ดร.ประสงค์ทองเณร': 'Rev. Dr. Prasong Thongnen',
+  'ศจ.สมใจรักษาศรี': 'Rev. Somjai Raksasri',
+  'ศจ.มานะรุจิระยรรยง': 'Rev. Mana Rujirayanyong',
+  'ศจ.ธิคุณภาพเสน่ห์': 'Rev. Thikhun Phapsane'
+};
+const ORG_EN = {
+  'คริสตจักรแห่งพันธสัญญา': 'Covenant Church',
+  'องค์กรคริสตจักรแห่งนิมิต': 'Church of Vision Organization',
+  'องค์กรคณะคริสเตียนสานสัมพันธ์': 'Sansamphan Christian Fellowship Organization',
+  'T-netคริสตจักรมหาชลเชียงใหม่': 'T-Net / Mahachon Church, Chiang Mai',
+  'GCA': 'GCA',
+  'องค์กรคริสตจักรชีวิตใหม่': 'New Life Church Organization',
+  'TTI(TheTimothyInitiative)': 'TTI (The Timothy Initiative)',
+  'องค์กรคริสตจักรพระผู้สร้าง': 'Church of the Creator Organization',
+  'องค์กรคริสตจักรเอกภาพแห่งพระคุณ': 'Unity of Grace Church Organization',
+  'คริสตจักรต้นกล้ามหาพร': 'Tonkla Mahaporn Church',
+  'คริสตจักรดรีมเชียงใหม่(สภาคริสตจักรฯ)': 'Dream Church Chiang Mai (Church of Christ in Thailand)',
+  'แบ๊บติสต์': 'Baptist',
+  'คริสตจักรในภาคใต้(CCI)': 'Churches in Southern Thailand (CCI)',
+  'คริสตจักรเมล็ดพันธุ์': 'Seed Church'
+};
+function hk(s){ return String(s || '').replace(/\s+/g, ''); }
+function leaderName(s){ return lang === 'en' ? (NAME_EN[hk(s)] || s) : s; }
+function orgName(s){ return lang === 'en' ? (ORG_EN[hk(s)] || s) : s; }
 var lang = 'th';
 try { lang = localStorage.getItem('ov_lang') || ((navigator.language || '').toLowerCase().indexOf('th') === 0 ? 'th' : 'th'); } catch(e){}
 function T(k){ return (I18N[lang] && I18N[lang][k]) || I18N.th[k] || k; }
@@ -224,8 +261,8 @@ function render(res){
   document.getElementById('grid').innerHTML = L.map(function(s){
     var pending = s.flagged;
     return '<div class="card ' + s.level + '">' +
-      (s.org ? '<div class="org">' + esc(s.org) + '</div>' : '') +
-      '<h3>' + esc(s.leader) + '</h3>' +
+      (s.org ? '<div class="org">' + esc(orgName(s.org)) + '</div>' : '') +
+      '<h3>' + esc(leaderName(s.leader)) + '</h3>' +
       '<div class="sub">' + s.cards + ' ' + T('cards') + (s.groupCount > 1 ? ' · ' + s.groupCount + ' ' + T('groups') : '') + '</div>' +
       '<div class="pct"><span>' + T('pct') + '</span><b>' + s.pctReported + '%</b></div>' +
       '<div class="bar"><i style="width:' + s.pctReported + '%"></i></div>' +
