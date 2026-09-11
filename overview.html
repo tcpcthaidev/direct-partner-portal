@@ -105,9 +105,10 @@
   <div class="topbar">
     <div>
       <h1><span data-i18n="title1">ภาพรวมความคืบหน้า รอบที่ 1 — Direct Partner ทั้ง</span> <span id="n-leaders">14</span> <span data-i18n="title2">องค์กร</span></h1>
-      <div class="meta"><span data-i18n="updated">ข้อมูลอัปเดตล่าสุด:</span> <span id="updated">-</span> <span data-i18n="updatedNote">(ระบบดึงจากฟอร์มทุก 1 ชั่วโมง)</span></div>
+      <div class="meta"><span data-i18n="updated">ข้อมูลอัปเดตล่าสุด:</span> <span id="updated">-</span> <span data-i18n="updatedNote">(ระบบดึงจากฟอร์มทุก 1 ชั่วโมง)</span> <span id="sync-msg" style="color:var(--blue);font-weight:600;"></span></div>
     </div>
     <div style="display:flex;gap:8px;">
+      <button class="btn-outline" id="sync-btn" onclick="doSync()" data-i18n="syncNow" style="display:none;border-color:var(--blue);color:var(--blue);">Sync ตอนนี้</button>
       <button class="btn-outline" onclick="loadData(true)" data-i18n="refresh">รีเฟรช</button>
       <button class="btn-outline" onclick="logout()" data-i18n="logout">ออก</button>
     </div>
@@ -156,6 +157,7 @@ const I18N = {
     lgGood:'ส่งแล้ว ≥ 80%', lgPartial:'ส่งแล้ว 40–79%', lgLow:'ส่งแล้ว < 40%', lgNone:'ยังไม่มีข้อมูลเลย',
     cards:'การ์ด', groups:'กลุ่มย่อย', pct:'ส่งรายงานรอบ 1 แล้ว', reported:'ส่งรายงานแล้ว', ppl:'คน', notReported:'ยังไม่ส่ง', reportRows:'รายงานผล', sets:'ชุด', evals:'แบบประเมิน', added:'เพิ่มใหม่จากรายงาน', pending:'รอตรวจ', items:'รายการ',
     lvGood:'คืบหน้าดี', lvPartial:'ส่งแล้วบางส่วน', lvLow:'ส่งแล้วเล็กน้อย', lvNone:'ยังไม่มีข้อมูล',
+    syncNow:'Sync ตอนนี้', syncing:'กำลัง sync… (ประมาณ 1 นาที)', syncDone:'sync เสร็จแล้ว', dStConf:'ตรวจแล้ว', confirmed:'ตรวจแล้ว',
     hint:'คลิกดูรายชื่อว่าใครส่งแล้ว ›', dNo:'#', dName:'ชื่อ Church Planter', dChurch:'คริสตจักร / กลุ่ม', dArea:'พื้นที่', dReport:'รายงานผล', dEval:'แบบประเมิน', dStWarn:'รอตรวจ', dStNew:'เพิ่มจากรายงาน', dPeople:'ทั้งหมด', dSent:'ส่งรายงานแล้ว', dEvalDone:'มีแบบประเมิน', dEvalUn:'แบบประเมินที่จับคู่ชื่อไม่ได้', dLoading:'กำลังโหลดรายชื่อ…', dNoGroup:'(ไม่ระบุกลุ่มย่อย)',
     note:'<b>วิธีอ่าน:</b> "การ์ด" = จำนวน Church Planter ในรายชื่อหลักขององค์กรนั้น (รวมคนที่เพิ่มเข้ามาจากรายงานรอบ 1) · "ส่งรายงานแล้ว" = คนที่มีรายงานผลรอบ 1 ในระบบ · "แบบประเมิน" = จำนวนชุดแบบประเมินที่ส่งเข้ามา (จับคู่กับรายชื่อหลักได้ / ทั้งหมด) · "รอตรวจ" = รายการที่ระบบจับคู่ชื่อได้ไม่แน่นอน ทีม TCPC กำลังตรวจสอบ · หน้านี้แสดงเฉพาะตัวเลขสรุป ไม่แสดงชื่อบุคคลหรือเบอร์โทร'
   },
@@ -169,6 +171,7 @@ const I18N = {
     lgGood:'≥ 80% reported', lgPartial:'40–79% reported', lgLow:'< 40% reported', lgNone:'No data yet',
     cards:'cards', groups:'sub-groups', pct:'Round 1 reports submitted', reported:'Reported', ppl:'people', notReported:'Not yet', reportRows:'Reports', sets:'sets', evals:'Evaluations', added:'New from reports', pending:'Pending review', items:'items',
     lvGood:'On track', lvPartial:'Partially reported', lvLow:'Just started', lvNone:'No data yet',
+    syncNow:'Sync now', syncing:'Syncing… (about 1 minute)', syncDone:'Sync complete', dStConf:'reviewed', confirmed:'Reviewed',
     hint:'Click to see who has reported ›', dNo:'#', dName:'Church Planter', dChurch:'Church / group', dArea:'Area', dReport:'Report', dEval:'Evaluation', dStWarn:'pending review', dStNew:'added from report', dPeople:'Total', dSent:'Reported', dEvalDone:'Evaluated', dEvalUn:'Evaluations not matched to a name', dLoading:'Loading list…', dNoGroup:'(no sub-group)',
     note:'<b>How to read:</b> "cards" = number of Church Planters on that organization\'s master list (including people added from Round 1 reports) · "Reported" = people with a Round 1 report in the system · "Evaluations" = evaluation forms received (matched to the master list / total) · "Pending review" = entries the system could not match with certainty; the TCPC team is checking them · This page shows summary numbers only — no personal names or phone numbers. Leader and organization names are transliterated from Thai.'
   }
@@ -263,6 +266,7 @@ function loadData(isRefresh){
       }
       try { sessionStorage.setItem('ov_code', currentCode); } catch(e){}
       level = res.level || 'view'; detailCache = {};
+      document.getElementById('sync-btn').style.display = level === 'admin' ? '' : 'none';
       render(res);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
@@ -304,7 +308,7 @@ function render(res){
         '<span>' + T('reportRows') + ' <b>' + s.reportRows + '</b> ' + T('sets') + '</span>' +
         '<span>' + T('evals') + ' <b>' + s.evalMatched + '</b> / ' + s.evalRows + ' ' + T('sets') + '</span>' +
         '<span>' + T('added') + ' <b>' + s.added + '</b> ' + T('ppl') + '</span>' +
-        '<span>' + T('pending') + ' <b>' + pending + '</b> ' + T('items') + '</span>' +
+        '<span>' + T('pending') + ' <b>' + pending + '</b> ' + T('items') + (s.confirmed ? ' · ' + T('confirmed') + ' <b>' + s.confirmed + '</b>' : '') + '</span>' +
       '</div>' +
       '<span class="tag ' + s.level + '">' + levelText(s.level) + '</span>' +
       '<div class="hint">' + T('hint') + '</div>' +
@@ -352,7 +356,7 @@ function renderDetail(res){
       html += '<tr class="grp"><td colspan="4">' + esc(g || T('dNoGroup')) + ' <span style="font-weight:400;color:#6b7280;">(' + rows.length + ')</span></td><td class="c">' + gs + '/' + rows.length + '</td><td class="c">' + ge + '/' + rows.length + '</td></tr>';
     }
     rows.forEach(function(p){
-      var st = p.status === 'warn' ? ' <span class="st-warn">⚠ ' + T('dStWarn') + '</span>' : (p.status === 'new' ? ' <span class="st-new">🆕 ' + T('dStNew') + '</span>' : '');
+      var st = p.status === 'warn' ? ' <span class="st-warn">⚠ ' + T('dStWarn') + '</span>' : (p.status === 'new' ? ' <span class="st-new">🆕 ' + T('dStNew') + '</span>' : (p.status === 'confirmed' ? ' <span class="st-new" style="color:var(--good)">✔ ' + T('dStConf') + (p.note ? ' — ' + esc(p.note.replace(/^✔\s*/, '')) : '') + '</span>' : ''));
       html += '<tr><td>' + esc(p.no) + '</td><td>' + esc(p.name) + st + '</td><td>' + esc(p.church) + '</td><td>' + esc(p.area) + '</td>' +
         '<td class="c">' + (p.report > 0 ? '<span class="ok">✓' + (p.report > 1 ? ' ×' + p.report : '') + '</span>' : '<span class="no">–</span>') + '</td>' +
         '<td class="c">' + (p.eval > 0 ? '<span class="ok">✓' + (p.eval > 1 ? ' ×' + p.eval : '') + '</span>' : '<span class="no">–</span>') + '</td></tr>';
@@ -362,8 +366,23 @@ function renderDetail(res){
   document.getElementById('m-table').innerHTML = html;
 }
 
+function doSync(){
+  if(level !== 'admin') return;
+  var btn = document.getElementById('sync-btn'), msg = document.getElementById('sync-msg');
+  btn.disabled = true; msg.textContent = T('syncing');
+  callApi('adminSync', { code: currentCode, clientId: getClientId() })
+    .then(function(res){
+      if(!res.success){ msg.textContent = res.message || T('errGeneric'); return; }
+      msg.textContent = T('syncDone') + ' (' + res.seconds + 's)';
+      detailCache = {}; loadData(true);
+      setTimeout(function(){ msg.textContent = ''; }, 8000);
+    })
+    .catch(function(){ msg.textContent = T('errConn'); })
+    .then(function(){ btn.disabled = false; });
+}
+
 function logout(){
-  closeDetail(); level = 'view'; detailCache = {};
+  closeDetail(); level = 'view'; detailCache = {}; document.getElementById('sync-btn').style.display = 'none';
   currentCode = '';
   try { sessionStorage.removeItem('ov_code'); } catch(e){}
   document.getElementById('app').style.display = 'none';
