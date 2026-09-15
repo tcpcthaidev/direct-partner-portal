@@ -22,15 +22,20 @@
   var CONFIG = {
     MATCH: /script\.google\.com\/macros\//,
     MAX_ATTEMPTS: 3,
-    DELAY_MS: 1200,
+    DELAY_MS: 1200,              // หน่วงก่อนลองใหม่ครั้งแรก (ครั้งถัดไปคูณเพิ่มตาม BACKOFF)
+    BACKOFF: 2.5,                // ยิ่งลองซ้ำยิ่งรอนานขึ้น เพื่อให้คิวฝั่ง Apps Script ระบายก่อน
 
     // บางครั้งคำขอค้างไม่ตอบกลับเลย ถ้าไม่กำหนดเวลาไว้ ปุ่มจะขึ้นว่า "กำลังลบ..." ค้างตลอดไป
-    ATTEMPT_TIMEOUT_MS: 20000,   // รอคำตอบต่อหนึ่งครั้งไม่เกินเท่านี้
-    TOTAL_DEADLINE_MS: 45000,    // รวมทุกครั้งแล้วไม่เกินเท่านี้ แล้วค่อยแจ้งผู้ใช้ว่าไม่สำเร็จ
+    // syncRound1 (รวมข้อมูลเข้าชีตรวม) รันทุกชั่วโมงและใช้เวลา 50-115 วินาที
+    // ระหว่างนั้น Apps Script จะเข้าคิวคำขอของผู้ใช้ไว้ ค่าเดิม 20 วินาทีจึงสั้นเกินไป
+    // ทำให้ยกเลิกคำขอที่กำลังจะสำเร็จ แล้วยิงซ้ำไปต่อคิวซ้อนอีก
+    ATTEMPT_TIMEOUT_MS: 45000,   // รอคำตอบต่อหนึ่งครั้งไม่เกินเท่านี้
+    TOTAL_DEADLINE_MS: 150000,   // รวมทุกครั้งแล้วไม่เกินเท่านี้ แล้วค่อยแจ้งผู้ใช้ว่าไม่สำเร็จ
 
     // คำสั่งที่ปลอดภัยจะลองซ้ำ ทำกี่ครั้งผลลัพธ์ก็เหมือนเดิม
     SAFE_ACTIONS: [
       'checkLogin',        // แค่อ่านข้อมูลมาแสดง
+      'getRound1',         // อ่านข้อมูลประเมินผล/รายงานผลรอบที่ 1 มาแสดง
       'listChurches',      // อ่านรายชื่อ
       'listDeleted',       // อ่านรายการที่ถูกลบ
       'deleteChurches',    // เขียนคำว่า "ลบแล้ว" ทับค่าเดิม ทำซ้ำได้ผลเท่าเดิม
@@ -121,6 +126,11 @@
         });
       }
 
+      /** หน่วงแบบเพิ่มขึ้นเรื่อย ๆ: 1.2 วิ แล้ว 3 วิ แทนที่จะยิงรัวไปต่อคิวซ้อน */
+      function delayFor(n) {
+        return Math.round(CONFIG.DELAY_MS * Math.pow(CONFIG.BACKOFF, n - 1));
+      }
+
       function attempt(n) {
         if (Date.now() >= deadline) giveUp = true;
 
@@ -130,7 +140,7 @@
             if (window.console && console.info) {
               console.info('[api-retry] คำตอบไม่ใช่ JSON กำลังลองใหม่ครั้งที่ ' + (n + 1));
             }
-            return wait(CONFIG.DELAY_MS).then(function () { return attempt(n + 1); });
+            return wait(delayFor(n)).then(function () { return attempt(n + 1); });
           }, function () {
             return res;
           });
@@ -141,7 +151,7 @@
           if (window.console && console.info) {
             console.info('[api-retry] คำขอล้มเหลวหรือใช้เวลานานเกินไป กำลังลองใหม่ครั้งที่ ' + (n + 1));
           }
-          return wait(CONFIG.DELAY_MS).then(function () { return attempt(n + 1); });
+          return wait(delayFor(n)).then(function () { return attempt(n + 1); });
         });
       }
 
