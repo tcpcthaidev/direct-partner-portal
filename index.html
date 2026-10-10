@@ -497,6 +497,33 @@ const GCA_FORM_LINKS_R2 = [
   { name: 'พันธกรทั้ง 5', desc: '', url: 'https://docs.google.com/forms/d/e/1FAIpQLSfwWqEs_WsQkfKHcqxAPs6xqKs7DHTxKEMlvlJzw1fmtgBvAQ/viewform' }
 ];
 
+/* ลิงก์แบบฟอร์มประเมิน ครั้งที่ 2 ของ Direct Partner แต่ละคน (ยกเว้น GCA ที่ใช้เมนูย่อยด้านบน)
+   ที่มา: ชีต "แบบฟอร์มประเมินและรายงานผลปี2026 ประเมินผลรอบที่ 2" คอลัมน์ E
+   จับคู่จากเบอร์ Contact ของ Direct Partner (ผู้ช่วยได้ลิงก์ของ Direct Partner ตัวเองด้วย เพราะใช้เบอร์ Contact เดียวกัน)
+   ทุกลิงก์ตรวจแล้วว่าหัวฟอร์มเป็น "ครั้งที่ 2 เดือนตุลาคม 2569" และมีชื่อผู้นำคนนั้นกำกับ
+   คนที่ยังไม่มีลิงก์ (ศจ.มานะ, บัญชีตัวอย่าง) กดแล้วจะขึ้นหน้า "รอทีมงาน TCPC แจ้ง..." ตามเดิม */
+const ROUND2_FORM_BY_PHONE = {
+  '643503070': 'https://docs.google.com/forms/d/e/1FAIpQLSfPe0kyIM1a6EpnDtPHj008eNNIrL9-YOsU9LO0y2h_29jaSQ/viewform', // อ.ณรงค์ กิจทวีสิน
+  '946184400': 'https://docs.google.com/forms/d/e/1FAIpQLSc8e3EVdyTdtNttKi1sK5qH9h9yeYGTzA-rKx4MI-bYMESW9Q/viewform', // ศจ.สิทธิชัย ว่องวีระยุทธ์
+  '864123791': 'https://docs.google.com/forms/d/e/1FAIpQLSfp2yMT8eLNOKvr3yfEs55hTLgcHeUasgFNDu-uytsd-YDQaw/viewform', // อ.จักรพันธ์ แกล้วกล้า
+  '915642419': 'https://docs.google.com/forms/d/e/1FAIpQLScBMp6GIbbH5atXFEDG0x9cp8wTIn51wXQunNkTahJKv7xr_w/viewform', // ศจ.ดร.เจริญศิรตา จิตศักดานนท์
+  '868855051': 'https://docs.google.com/forms/d/e/1FAIpQLSeQQIMN3zxAwWkI5i9xOal-NHZ3nbh2aA_EGCEHeGK1Bx104w/viewform', // ศจ. คำสิงห์ รวมวงค์
+  '863814325': 'https://docs.google.com/forms/d/e/1FAIpQLSeb7By1EWUzekABD6fxlYhUpcB4Z2UmguG_9NlTsqAwH-yaGw/viewform', // อ. อรรถสิทธิ์ ชำนาญเอื้อ (TTI)
+  '909322850': 'https://docs.google.com/forms/d/e/1FAIpQLSeLefEZ4rdR8ZcwAS8X9ioxEXZnJ1vukhhh6NMCCZe5kMzjLQ/viewform', // ศจ. คัมภีร์ รองหานาม
+  '870706471': 'https://docs.google.com/forms/d/e/1FAIpQLSfhKW-a5pfIUdIfO7eiyoBDmVbs51bSNTN_JCQszvfhnv80vQ/viewform', // ศจ.อภิชาติ กาลวันตวานิช
+  '890617990': 'https://docs.google.com/forms/d/e/1FAIpQLSdYCjr5R7L4v7ZyTcrFjS5J8GI-N3ehLqfWH7uOhnLzC-tlGw/viewform', // อ.วันชัย วงศ์เลวี
+  '846158786': 'https://docs.google.com/forms/d/e/1FAIpQLSf_e7lCxd4CjymlmuW_W7f3049xQ4VSA_e2q9BoHWlseMwAcw/viewform', // ศจ.ดร.ประสงค์ ทองเณร
+  '841191100': 'https://docs.google.com/forms/d/e/1FAIpQLSduf2gZ9CCwFm7yzDf0aL3MptZsQ6sI10udKVJJRYOKsQx_Bg/viewform', // ศจ.สมใจ รักษาศรี
+  '818912503': 'https://docs.google.com/forms/d/e/1FAIpQLSeFlRaqgQHFwwGgpErY4R0X08QzMCMpFx2ERd4nZ4NYjU3GsA/viewform'  // ศจ. ธิคุณ ภาพเสน่ห์
+};
+
+/* คืนลิงก์ครั้งที่ 2 ของผู้ที่ล็อกอินอยู่ (ตัดตัวที่ไม่ใช่ตัวเลขและเลข 0 นำหน้าออก เหมือนฝั่งเซิร์ฟเวอร์) */
+function round2FormUrl(partner){
+  if(!partner) return '';
+  const key = String(partner.contact || '').replace(/\D/g, '').replace(/^0+/, '');
+  return ROUND2_FORM_BY_PHONE[key] || '';
+}
+
 /* เมนูย่อยของ GCA ใช้แผงเดียวกันทั้งครั้งที่ 1 และ 2 แค่สลับรายการลิงก์และหัวข้อตามปุ่มที่กด */
 const GCA_ROUNDS = {
   0: { links: GCA_FORM_LINKS,    title: 'เลือกแบบฟอร์มประเมินผล ครั้งที่ 1 (สิงหาคม 2569)', btnId: 'btn-report-1' },
@@ -566,7 +593,7 @@ document.querySelectorAll('.btn-report').forEach(function(btn){
       return;
     }
     toggleGcaFormMenu(false);
-    const url = REPORT_FORM_URLS[idx];
+    const url = (idx === 1 && round2FormUrl(currentPartner)) || REPORT_FORM_URLS[idx];
     if(!url || url === '#'){
       document.getElementById('coming-soon-screen').style.display = 'flex';
     } else {
