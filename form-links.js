@@ -194,6 +194,8 @@
         if (!btn) return;
         // ปุ่มที่มีเมนูย่อยของหน้าเว็บเอง (เช่น GCA ครั้งที่ 1 และ 2) ให้หน้าเว็บจัดการเอง ไม่แทรกเมนูซ้อน
         if (btn.classList.contains('has-sub')) return;
+        // ปุ่มที่หน้าเว็บล็อกไว้เอง (เช่น ครั้งที่ 1 ที่ปิดรับแล้ว) ห้ามแทรกเมนูหรือเปิดลิงก์แทน
+        if (btn.hasAttribute('data-locked')) return;
         var idx = parseInt(btn.getAttribute('data-form-idx'), 10);
         if (isNaN(idx)) return;
         var list = state.rounds[idx] || [];

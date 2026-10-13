@@ -259,7 +259,7 @@
   <div class="assistant-banner" id="assistant-banner"></div>
 
   <div class="report-btn-row">
-    <button class="btn-report" id="btn-report-1" data-form-idx="0">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนสิงหาคม 2569"<br><span class="sub-badge">เลือกแบบฟอร์ม 11 รายการ <b>&#9660;</b></span></button>
+    <button class="btn-report" id="btn-report-1" data-form-idx="0" data-locked="1">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 1 เดือนสิงหาคม 2569"<br><span class="sub-badge">เลือกแบบฟอร์ม 11 รายการ <b>&#9660;</b></span></button>
     <button class="btn-report" id="btn-report-2" data-form-idx="1">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 2 เดือนตุลาคม 2569"<br><span class="sub-badge">เลือกแบบฟอร์ม 11 รายการ <b>&#9660;</b></span></button>
     <button class="btn-report" data-form-idx="2">แบบฟอร์มประเมินผลคริสตจักร<br>"ครั้งที่ 3 เดือนมกราคม 2570"</button>
   </div>
@@ -327,7 +327,7 @@
 <!-- ============ COMING SOON (REPORT FORM PLACEHOLDER) SCREEN ============ -->
 <div class="coming-soon-screen" id="coming-soon-screen">
   <div class="big">🕊️</div>
-  <div class="coming-soon-msg">รอทีมงาน TCPC แจ้งวันที่เผยแพร่แบบฟอร์มนี้อีกครั้ง เพื่อเริ่มประเมินผล</div>
+  <div class="coming-soon-msg" id="coming-soon-msg">รอทีมงาน TCPC แจ้งวันที่เผยแพร่แบบฟอร์มนี้อีกครั้ง เพื่อเริ่มประเมินผล</div>
   <button class="btn-outline" id="coming-soon-back-btn">กลับ</button>
 </div>
 
@@ -525,9 +525,32 @@ function round2FormUrl(partner){
   return ROUND2_FORM_BY_PHONE[key] || '';
 }
 
+/* ===== ปิดรับแบบฟอร์มประเมิน ครั้งที่ 1 (สิงหาคม 2569) =====
+   ปิดสำหรับทุก Direct Partner และผู้ช่วย ยกเว้นองค์กรที่อยู่ในรายการ ROUND1_STILL_OPEN ด้านล่าง
+   จับคู่จากเบอร์ Contact ของ Direct Partner (ผู้ช่วยได้สิทธิ์เดียวกับ Direct Partner ของตัวเอง)
+   ถ้าจะเปิดให้องค์กรอื่นเพิ่ม ให้ใส่เบอร์ (ตัด 0 นำหน้า) และลิงก์ฟอร์มครั้งที่ 1 ของคนนั้นเพิ่มในรายการนี้ */
+const ROUND1_CLOSED_MSG = 'ปิดระบบลงทะเบียน กรุณาติดต่อเจ้าหน้าที่';
+const ROUND1_STILL_OPEN = {
+  '863814325': 'https://docs.google.com/forms/d/e/1FAIpQLSf_v6MAAjWZE0d649z-6AeIz6tuxVE1fsD4tEzDERmhTtwgmg/viewform' // TTI - อ. อรรถสิทธิ์ ชำนาญเอื้อ
+};
+
+function partnerPhoneKey(partner){
+  return String((partner && partner.contact) || '').replace(/\D/g, '').replace(/^0+/, '');
+}
+function round1OpenUrl(partner){
+  return ROUND1_STILL_OPEN[partnerPhoneKey(partner)] || '';
+}
+
+/* หน้าแจ้งเตือนเต็มจอเดิม ใช้ร่วมกันทั้ง "รอทีมงาน TCPC แจ้ง..." และ "ปิดระบบลงทะเบียน..." */
+const COMING_SOON_DEFAULT_MSG = 'รอทีมงาน TCPC แจ้งวันที่เผยแพร่แบบฟอร์มนี้อีกครั้ง เพื่อเริ่มประเมินผล';
+function showNoticeScreen(msg){
+  document.getElementById('coming-soon-msg').textContent = msg || COMING_SOON_DEFAULT_MSG;
+  document.getElementById('coming-soon-screen').style.display = 'flex';
+}
+
 /* เมนูย่อยของ GCA ใช้แผงเดียวกันทั้งครั้งที่ 1 และ 2 แค่สลับรายการลิงก์และหัวข้อตามปุ่มที่กด */
 const GCA_ROUNDS = {
-  0: { links: GCA_FORM_LINKS,    title: 'เลือกแบบฟอร์มประเมินผล ครั้งที่ 1 (สิงหาคม 2569)', btnId: 'btn-report-1' },
+  /* ครั้งที่ 1 ปิดรับแล้ว จึงไม่มีเมนูย่อยของ GCA สำหรับครั้งที่ 1 (ลิงก์ GCA_FORM_LINKS เก็บไว้เผื่อเปิดใหม่) */
   1: { links: GCA_FORM_LINKS_R2, title: 'เลือกแบบฟอร์มประเมินผล ครั้งที่ 2 (ตุลาคม 2569)', btnId: 'btn-report-2' }
 };
 let gcaOpenRound = null;
@@ -594,9 +617,15 @@ document.querySelectorAll('.btn-report').forEach(function(btn){
       return;
     }
     toggleGcaFormMenu(false);
+    if(idx === 0){
+      const openUrl = round1OpenUrl(currentPartner);
+      if(openUrl){ window.open(openUrl, '_blank'); }
+      else { showNoticeScreen(ROUND1_CLOSED_MSG); }
+      return;
+    }
     const url = (idx === 1 && round2FormUrl(currentPartner)) || REPORT_FORM_URLS[idx];
     if(!url || url === '#'){
-      document.getElementById('coming-soon-screen').style.display = 'flex';
+      showNoticeScreen();
     } else {
       window.open(url, '_blank');
     }
