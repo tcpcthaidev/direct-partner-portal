@@ -526,12 +526,14 @@ function round2FormUrl(partner){
 }
 
 /* ===== ปิดรับแบบฟอร์มประเมิน ครั้งที่ 1 (สิงหาคม 2569) =====
-   ปิดสำหรับทุก Direct Partner และผู้ช่วย ยกเว้นองค์กรที่อยู่ในรายการ ROUND1_STILL_OPEN ด้านล่าง
+   ปิดสำหรับทุก Direct Partner และผู้ช่วย ยกเว้นองค์กรที่อยู่ในรายการ ROUND1_STILL_OPEN ด้านล่าง (ตอนนี้ว่าง = ปิดทุกคน)
    จับคู่จากเบอร์ Contact ของ Direct Partner (ผู้ช่วยได้สิทธิ์เดียวกับ Direct Partner ของตัวเอง)
    ถ้าจะเปิดให้องค์กรอื่นเพิ่ม ให้ใส่เบอร์ (ตัด 0 นำหน้า) และลิงก์ฟอร์มครั้งที่ 1 ของคนนั้นเพิ่มในรายการนี้ */
 const ROUND1_CLOSED_MSG = 'ปิดระบบลงทะเบียน กรุณาติดต่อเจ้าหน้าที่';
 const ROUND1_STILL_OPEN = {
-  '863814325': 'https://docs.google.com/forms/d/e/1FAIpQLSf_v6MAAjWZE0d649z-6AeIz6tuxVE1fsD4tEzDERmhTtwgmg/viewform' // TTI - อ. อรรถสิทธิ์ ชำนาญเอื้อ
+  // ตอนนี้ปิดครบทุกองค์กรแล้ว (รวม TTI)
+  // ถ้าจะเปิดให้ TTI อีกครั้ง ให้ใส่บรรทัดนี้กลับเข้าไป:
+  // '863814325': 'https://docs.google.com/forms/d/e/1FAIpQLSf_v6MAAjWZE0d649z-6AeIz6tuxVE1fsD4tEzDERmhTtwgmg/viewform' // TTI - อ. อรรถสิทธิ์ ชำนาญเอื้อ
 };
 
 function partnerPhoneKey(partner){
