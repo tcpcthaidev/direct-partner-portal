@@ -293,12 +293,14 @@
   <div class="section-title-row">
     <div class="view-tabs">
       <button class="view-tab roster active" data-view="roster">รายชื่อผู้บุกเบิกคริสตจักรในเครือข่ายของคุณ</button>
+      <button class="view-tab registry" data-view="registry">✅ ยืนยันทะเบียนผู้บุกเบิก</button>
       <button class="view-tab eval" data-view="eval">ประเมินผลรอบที่ 1 Direct Partner</button>
       <button class="view-tab report" data-view="report">รายงานผลรอบที่ 1 Church Planter</button>
     </div>
   </div>
   <div id="planter-container"></div>
   <div id="round1-container" style="display:none;"></div>
+  <div id="registry-container" style="display:none;"></div>
 </div>
 
 <!-- ============ ADD CHURCH MODAL ============ -->
@@ -721,6 +723,13 @@ function switchView(view){
   document.querySelectorAll('.view-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view') === view); });
   const roster = document.getElementById('planter-container');
   const r1 = document.getElementById('round1-container');
+  if(view === 'registry'){
+    roster.style.display = 'none'; r1.style.display = 'none';
+    if(window.PlanterRegistry) window.PlanterRegistry.show();
+    else document.getElementById('registry-container').innerHTML = '<div class="r1-empty">กำลังโหลด…</div>';
+    return;
+  }
+  if(window.PlanterRegistry) window.PlanterRegistry.hide();
   if(view === 'roster'){ roster.style.display = 'block'; r1.style.display = 'none'; return; }
   roster.style.display = 'none'; r1.style.display = 'block';
   if(r1Cache[view]){ renderRound1(r1Cache[view]); return; }
@@ -784,7 +793,7 @@ function firstField(row, kw){
 }
 
 // ล้าง cache มุมมองรอบ 1 เมื่อออกจากระบบ (หาปุ่มออกจากระบบเดิม แล้วเรียก resetRound1() ใน handler)
-function resetRound1(){ r1Cache = { eval: null, report: null }; switchView('roster'); }
+function resetRound1(){ r1Cache = { eval: null, report: null }; if(window.PlanterRegistry) window.PlanterRegistry.reset(); switchView('roster'); }
 
 // รีเฟรชข้อมูลหลังเพิ่มคริสตจักรสำเร็จ โดยใช้เบอร์เดิมที่ล็อกอินอยู่ (ไม่ต้องขอกรอกใหม่)
 // ใช้ currentLoginPhone (เบอร์ที่พิมพ์ล็อกอินจริง) ไม่ใช่ currentPartner.contact เพราะถ้าล็อกอินด้วยเบอร์ผู้ช่วย
@@ -814,6 +823,9 @@ function attemptLoginSilently(){
 
 <!-- ลิงก์แบบฟอร์มประเมินของแต่ละกลุ่ม — ถอดออกได้โดยลบ 1 บรรทัดนี้ -->
 <script src="form-links.js" defer></script>
+
+<!-- ทะเบียนผู้บุกเบิกกลาง: ให้ผู้นำยืนยันรายชื่อ — ถอดออกได้โดยลบ 1 บรรทัดนี้ (และปุ่ม data-view="registry") -->
+<script src="registry.js" defer></script>
 
 </body>
 </html>
